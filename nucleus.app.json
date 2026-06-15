@@ -1,0 +1,42 @@
+{
+  "id": "echo",
+  "name": "Echo",
+  "description": "Real-time messaging",
+  "route": "/echo",
+  "icon": "icon.svg",
+  "category": "communication",
+  "hub": {
+    "showInSidebar": true,
+    "showOnDashboard": true
+  },
+  "nginx": {
+    "routes": [
+      {
+        "path": "/echo",
+        "upstream": "echo-client:5179",
+        "websocket": true
+      },
+      {
+        "path": "/api/echo",
+        "upstream": "echo-server:3006",
+        "websocket": true
+      }
+    ]
+  },
+  "server": {
+    "service": "echo-server",
+    "port": 3006,
+    "env": {
+      "MONGODB_URI": "mongodb://mongo:27017/nucleus",
+      "REDIS_URL": "redis://redis:6379",
+      "APPS_DIR": "/apps",
+      "JWT_SECRET": "${JWT_SECRET:-nucleus-jwt-secret}"
+    },
+    "depends": [
+      "mongo",
+      "redis"
+    ],
+    "healthEndpoint": "/api/echo/health",
+    "startPeriod": "15s"
+  }
+}
