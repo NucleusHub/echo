@@ -3,6 +3,11 @@ services:
     build:
       context: ./server
     restart: unless-stopped
+    labels:
+      nucleus.managed: "true"
+      nucleus.stack: "nucleus"
+      nucleus.role: "app-server"
+      nucleus.app: "echo"
     environment:
       MONGODB_URI: mongodb://mongo:27017/nucleus
       REDIS_URL: redis://redis:6379
@@ -31,6 +36,11 @@ services:
     build:
       context: ./client
     restart: unless-stopped
+    labels:
+      nucleus.managed: "true"
+      nucleus.stack: "nucleus"
+      nucleus.role: "app-client"
+      nucleus.app: "echo"
     environment:
       API_TARGET: http://echo-server:3006
     volumes:
