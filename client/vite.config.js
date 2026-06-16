@@ -35,6 +35,6 @@ export default defineConfig(({ mode }) => ({
         ws: true,
       },
     },
-    allowedHosts: ['nucleus.home', 'server.tail874d1f.ts.net'],
+    allowedHosts: ['nucleus.olm-altair.ts.net'],
   },
 }))
