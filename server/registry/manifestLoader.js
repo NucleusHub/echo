@@ -25,7 +25,6 @@ function normalizeManifest(raw, appDir) {
     messageTypes: Array.isArray(raw.message_types) ? raw.message_types : [],
     composerActions: Array.isArray(raw.composer_actions) ? raw.composer_actions : [],
     contextActions: Array.isArray(raw.context_actions) ? raw.context_actions : [],
-    renderers: Array.isArray(raw.renderers) ? raw.renderers : [],
     _dir: appDir,
   }
 }

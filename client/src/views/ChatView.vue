@@ -1,12 +1,11 @@
 <script setup>
-import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, markRaw, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppSidebar from '@core/AppSidebar.vue'
 import AppHeader from '@core/AppHeader.vue'
 import TemplateModal from '@core/TemplateModal.vue'
 import AvatarCircle from '@core/auth/AvatarCircle.vue'
 import SharePickerModal from '@/components/SharePickerModal.vue'
-import FileTreePickerModal from '@/components/FileTreePickerModal.vue'
 import ChatRow from '@/components/ChatRow.vue'
 import PeopleModal from '@/components/PeopleModal.vue'
 import NewChatModal from '@/components/NewChatModal.vue'
@@ -18,6 +17,12 @@ import { useAuth } from '@core/auth/useAuth.js'
 import { api } from '@/api/echo.js'
 import { useEchoRegistry } from '@/composables/useEchoRegistry.js'
 import { useEchoSocket } from '@/composables/useEchoSocket.js'
+import { COMPOSER_HANDLERS, RENDERERS_BY_TYPE } from '@/echo-integrations.js'
+
+// App-contributed message renderers (type -> component), auto-discovered from
+// each app's integration. Provided down to the core EchoCardRenderer so it can
+// resolve app types without core ever importing an app.
+provide('echoRenderers', RENDERERS_BY_TYPE)
 
 const route = useRoute()
 const router = useRouter()
@@ -36,6 +41,13 @@ const chats = ref([])
 const messages = ref([])
 const activeId = ref(route.params.chatId || null)
 const scroller = ref(null)
+
+// Deep-linking to a specific message (e.g. from the dashboard widget's
+// attachment link: /echo/c/<chatId>?msg=<id>). `pendingHighlight` is the id to
+// jump to once that chat's history loads; `highlightId` drives the transient
+// highlight pulse on the matching bubble.
+const pendingHighlight = ref(null)
+const highlightId = ref(null)
 
 // People you can start a chat with (all profiles except yourself).
 const profiles = ref([])
@@ -90,6 +102,18 @@ const composerActions = computed(() => registry.value.composerActions || [])
 
 const activeChat = computed(() => chats.value.find(c => c.id === activeId.value) || null)
 
+// A message ends a "group" (→ shows its timestamp + a margin below) when it's the
+// last message, the next one is from a different sender, or the next one is more
+// than 10 minutes later. So a burst from one person collapses under one time.
+const GROUP_GAP_MS = 10 * 60 * 1000
+function endsGroup(i) {
+  const m = messages.value[i]
+  const next = messages.value[i + 1]
+  if (!next) return true
+  if (next.senderId !== m.senderId) return true
+  return new Date(next.createdAt) - new Date(m.createdAt) > GROUP_GAP_MS
+}
+
 // Typing indicator (anyone other than me currently typing in this chat).
 const typingHere = computed(() => {
   const set = typingByChat.value[activeId.value]
@@ -110,12 +134,26 @@ async function openChat(id) {
   messages.value = await api.history(id)
   markRead(id)
   unread.value = { ...unread.value, [id]: 0 }
-  await scrollToBottom()
+  // If we arrived via a message deep-link, jump to & highlight it; else bottom.
+  const target = pendingHighlight.value
+  pendingHighlight.value = null
+  if (target && messages.value.some(m => m.id === target)) await focusMessage(target)
+  else await scrollToBottom()
 }
 
 async function scrollToBottom() {
   await nextTick()
   if (scroller.value) scroller.value.scrollTop = scroller.value.scrollHeight
+}
+
+// Scroll a message into view and pulse-highlight it for a couple of seconds.
+async function focusMessage(id) {
+  await nextTick()
+  const el = document.getElementById(`echo-msg-${id}`)
+  if (!el) { await scrollToBottom(); return }
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  highlightId.value = id
+  setTimeout(() => { if (highlightId.value === id) highlightId.value = null }, 2600)
 }
 
 // Start (or reopen) a DM with a profile. The backend dedupes on the member pair,
@@ -219,7 +257,12 @@ async function detailsRemove(memberId) {
   if (detailsChat.value) await api.removeMember(detailsChat.value.id, memberId)
 }
 async function detailsTransfer(memberId) {
-  if (detailsChat.value) await api.transferOwner(detailsChat.value.id, memberId, profileName(memberId))
+  if (!detailsChat.value) return
+  await api.transferOwner(detailsChat.value.id, memberId, profileName(memberId))
+  // You just handed admin to someone else, so you can no longer manage this group
+  // — close the details modal. Global admins (role 'admin') keep access via
+  // canManageGroup, so leave it open for them.
+  if (profile.value?.role !== 'admin') closeDetails()
 }
 
 // Leave a group (any member, anytime — removes only yourself).
@@ -262,88 +305,41 @@ async function handleSend(message) {
   // optimistically append here — keeps a single source of truth.
 }
 
-// ── Cross-app share sources ────────────────────────────────────────────────
-// Each composer action maps to a real source: how to load the user's items from
-// that app's API, and how to turn a picked item into the app-typed message Echo
-// sends. Echo core stays app-agnostic — this is the host wiring the actions the
-// registry surfaced to concrete data.
-function prettySize(b) {
-  b = Number(b || 0)
-  if (!b) return ''
-  const u = ['B', 'KB', 'MB', 'GB']
-  let i = 0
-  while (b >= 1024 && i < u.length - 1) { b /= 1024; i++ }
-  return `${b.toFixed(b < 10 && i ? 1 : 0)} ${u[i]}`
-}
-// Consecutive-day streak ending today (or yesterday if today isn't done yet).
-function goalStreak(dates) {
-  if (!dates?.length) return 0
-  const set = new Set(dates)
-  const iso = d => d.toISOString().slice(0, 10)
-  const d = new Date()
-  if (!set.has(iso(d))) d.setDate(d.getDate() - 1)
-  let n = 0
-  while (set.has(iso(d))) { n++; d.setDate(d.getDate() - 1) }
-  return n
-}
-const todayIso = () => new Date().toISOString().slice(0, 10)
-
-// Orbit uses a dedicated drive-tree picker (below); Goals/Watchlist use the
-// generic list/grid picker.
-const SHARE_SOURCES = {
-  'goal-calendar:share_goal': {
-    title: 'Share a goal',
-    layout: 'list',
-    fetch: () => fetch('/api/goals', { credentials: 'include' }).then(r => r.json()),
-    map: g => {
-      const done = (g.completedDates || []).includes(todayIso())
-      return {
-        key: g._id,
-        title: g.name,
-        subtitle: done ? 'Completed today' : 'In progress',
-        dot: g.color,
-        message: { type: 'goal.update', payload: {
-          goalId: g._id, name: g.name, color: g.color,
-          status: done ? 'completed' : 'active', streak: goalStreak(g.completedDates), date: todayIso(),
-          repeat: g.repeat, customInterval: g.customInterval, customUnit: g.customUnit, startDate: g.startDate,
-        } },
-      }
-    },
-  },
-  'watchlist:share_watchlist': {
-    title: 'Share from Watchlist',
-    layout: 'grid',
-    fetch: () => fetch('/api/watchlist', { credentials: 'include' }).then(r => r.json()),
-    map: i => ({
-      key: i._id,
-      title: i.title,
-      subtitle: [i.type === 'show' ? 'Show' : 'Movie', i.status].filter(Boolean).join(' · '),
-      thumb: i.posterUrl,
-      message: { type: 'watchlist.item', payload: { itemId: i._id, title: i.title, type: i.type, status: i.status, posterUrl: i.posterUrl, year: i.year, rating: i.rating, tmdbRating: i.tmdbRating } },
-    }),
-  },
-}
-
+// ── Composer actions (fully app-agnostic) ───────────────────────────────────
+// Every composer button comes from the registry (an app's manifest); its
+// behaviour comes from that app's integration, auto-discovered in
+// echo-integrations.js. A handler is either `{ source }` (Echo's generic
+// list/grid picker) or `{ picker, toMessage }` (the app's own picker component).
+// Echo wires the two together here and knows nothing about any specific app.
 const sharePicker = ref({ open: false, title: '', items: [], loading: false, layout: 'list' })
-const fileTreeOpen = ref(false)
+const customPicker = ref({ open: false, component: null, toMessage: null })
+
+function closeCustomPicker() {
+  customPicker.value = { open: false, component: null, toMessage: null }
+}
 
 async function handleAction(action) {
   if (!activeId.value) return
-  // Orbit → full drive tree picker.
-  if (action.app === 'orbit' && action.id === 'upload_file') {
-    fileTreeOpen.value = true
+  const def = COMPOSER_HANDLERS[`${action.app}:${action.id}`]
+  if (!def) return
+
+  // App-supplied picker component (e.g. Orbit's drive tree).
+  if (def.picker) {
+    customPicker.value = { open: true, component: markRaw(def.picker), toMessage: def.toMessage }
     return
   }
-  const source = SHARE_SOURCES[`${action.app}:${action.id}`]
-  if (!source) return
-  sharePicker.value = { open: true, title: source.title, items: [], loading: true, layout: source.layout || 'list' }
-  try {
-    const raw = await source.fetch()
-    sharePicker.value.items = (Array.isArray(raw) ? raw : []).map(source.map)
-  } catch {
-    sharePicker.value.items = []
-  } finally {
-    sharePicker.value.loading = false
+
+  // Generic share picker: load the app's items and map each to a picker row.
+  if (def.source) {
+    sharePicker.value = { open: true, title: def.source.title, items: [], loading: true, layout: def.source.layout || 'list' }
+    try {
+      const raw = await def.source.fetch()
+      sharePicker.value.items = (Array.isArray(raw) ? raw : []).map(def.source.map)
+    } catch {
+      sharePicker.value.items = []
+    } finally {
+      sharePicker.value.loading = false
+    }
   }
 }
 
@@ -352,12 +348,13 @@ async function pickShare(item) {
   await send(activeId.value, item.message)
 }
 
-async function pickFile(file) {
-  fileTreeOpen.value = false
-  await send(activeId.value, {
-    type: 'orbit.file',
-    payload: { fileId: file.id, name: file.name, mimeType: file.mimeType, size: file.size, url: file.url },
-  })
+// An app picker emitted a selection → its integration's toMessage builds the
+// app-typed message Echo sends.
+async function pickCustom(selection) {
+  const toMessage = customPicker.value.toMessage
+  closeCustomPicker()
+  const message = toMessage?.(selection)
+  if (message) await send(activeId.value, message)
 }
 
 let typingTimer = null
@@ -412,6 +409,8 @@ onChatRemoved(chatId => {
 watch(() => route.params.chatId, id => { if (id && id !== activeId.value) openChat(id) })
 
 onMounted(async () => {
+  // Capture the deep-link target before openChat() strips the query via replace().
+  pendingHighlight.value = route.query.msg ? String(route.query.msg) : null
   await Promise.all([
     loadRegistry(),
     loadChats(),
@@ -530,12 +529,13 @@ onMounted(async () => {
 
       <div ref="scroller" class="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">
         <EchoMessageBubble
-          v-for="m in messages"
+          v-for="(m, i) in messages"
           :key="m.id"
           :message="m"
-          :registry="registry"
           :current-user-id="currentUserId"
           :sender="m.senderId ? profileMap[m.senderId] : null"
+          :show-time="endsGroup(i)"
+          :highlight="m.id === highlightId"
         />
         <p v-if="activeId && !messages.length" class="m-auto text-sm text-slate-400 dark:text-white/40">
           No messages yet — say hello 👋
@@ -577,8 +577,15 @@ onMounted(async () => {
     @close="sharePicker.open = false"
   />
 
-  <!-- Orbit drive tree (file sharing) -->
-  <FileTreePickerModal :show="fileTreeOpen" @select="pickFile" @close="fileTreeOpen = false" />
+  <!-- App-supplied picker (e.g. Orbit drive tree) — mounted generically from the
+       active composer action's integration; emits a selection Echo turns into a message. -->
+  <component
+    :is="customPicker.component"
+    v-if="customPicker.component"
+    :show="customPicker.open"
+    @select="pickCustom"
+    @close="closeCustomPicker"
+  />
 
   <!-- "Chats" header menu: New chat / New group chat -->
   <Teleport to="body">

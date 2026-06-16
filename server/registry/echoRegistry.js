@@ -10,33 +10,29 @@ const BUILTIN_TYPES = ['text', 'system']
 class EchoRegistry {
   constructor() {
     this.manifests = []
-    this.messageTypes = new Map() // type -> { app, renderer }
+    this.messageTypes = new Map() // type -> { app }
     this.composerActions = []
     this.contextActions = []
-    this.renderers = []
-    for (const t of BUILTIN_TYPES) this.messageTypes.set(t, { app: null, renderer: null })
+    for (const t of BUILTIN_TYPES) this.messageTypes.set(t, { app: null })
   }
 
   // (Re)build the registry from disk. Called once on boot; safe to call again
   // to hot-reload manifests without restarting the process.
   load() {
     this.manifests = loadManifests()
-    this.messageTypes = new Map(BUILTIN_TYPES.map(t => [t, { app: null, renderer: null }]))
+    this.messageTypes = new Map(BUILTIN_TYPES.map(t => [t, { app: null }]))
     this.composerActions = []
     this.contextActions = []
-    this.renderers = []
 
     for (const m of this.manifests) {
-      const rendererByType = new Map(m.renderers.map(r => [r.type, r.component]))
       for (const type of m.messageTypes) {
         if (this.messageTypes.has(type) && this.messageTypes.get(type).app !== m.app) {
           console.warn(`[echo] message type "${type}" already registered — ${m.app} overrides`)
         }
-        this.messageTypes.set(type, { app: m.app, renderer: rendererByType.get(type) || null })
+        this.messageTypes.set(type, { app: m.app })
       }
       this.composerActions.push(...m.composerActions.map(a => ({ ...a, app: m.app })))
       this.contextActions.push(...m.contextActions.map(a => ({ ...a, app: m.app })))
-      this.renderers.push(...m.renderers.map(r => ({ ...r, app: m.app })))
     }
 
     console.log(`[echo] registry ready: ${this.manifests.length} apps, ${this.messageTypes.size} message types`)
@@ -62,7 +58,6 @@ class EchoRegistry {
         features: m.features,
       })),
       messageTypes: Object.fromEntries(this.messageTypes),
-      renderers: this.renderers,
       composerActions: this.composerActions,
       contextActions: this.contextActions,
       builtinTypes: BUILTIN_TYPES,

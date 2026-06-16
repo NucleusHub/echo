@@ -2,13 +2,13 @@ import { ref } from 'vue'
 import { api } from '@/api/echo.js'
 
 // Loads the unified Echo registry once and shares it app-wide. This is the
-// frontend half of the auto-discovery system: composer actions, context actions
-// and the message-type → renderer mapping all come from here, populated entirely
-// from the apps' manifests with zero hard-coding.
+// frontend half of the auto-discovery system: the composer/context actions and
+// the known message types all come from here, populated entirely from the apps'
+// manifests with zero hard-coding. (Renderer components are discovered
+// separately, client-side, from each app's integration — see echo-integrations.js.)
 const registry = ref({
   apps: [],
   messageTypes: {},
-  renderers: [],
   composerActions: [],
   contextActions: [],
   builtinTypes: [],
