@@ -8,6 +8,7 @@ services:
       nucleus.stack: "nucleus"
       nucleus.role: "app-server"
       nucleus.app: "echo"
+      nucleus.depends: "mongo,redis"
     environment:
       MONGODB_URI: mongodb://mongo:27017/nucleus
       REDIS_URL: redis://redis:6379
