@@ -35,6 +35,6 @@ export default defineConfig(({ mode }) => ({
         ws: true,
       },
     },
-    allowedHosts: ['nucleus.olm-altair.ts.net'],
+    allowedHosts: [process.env.NUCLEUS_HOST || 'nucleus.olm-altair.ts.net'],
   },
 }))

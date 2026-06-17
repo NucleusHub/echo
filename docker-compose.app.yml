@@ -44,6 +44,7 @@ services:
       nucleus.app: "echo"
     environment:
       API_TARGET: http://echo-server:3006
+      NUCLEUS_HOST: ${NUCLEUS_HOST:-nucleus.olm-altair.ts.net}
     volumes:
       - ./client/src:/app/src
       - ./client/index.html:/app/index.html
