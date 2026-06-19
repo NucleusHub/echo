@@ -9,6 +9,7 @@ import { initSocket } from './realtime/socket.js'
 import registryRouter from './routes/registry.js'
 import chatsRouter from './routes/chats.js'
 import messagesRouter from './routes/messages.js'
+import usersRouter from './routes/users.js'
 
 const app = express()
 const PORT = process.env.PORT || 3006
@@ -23,6 +24,7 @@ app.get('/api/echo/health', (_req, res) =>
 app.use('/api/echo/registry', registryRouter)
 app.use('/api/echo/chats', chatsRouter)
 app.use('/api/echo/messages', messagesRouter)
+app.use('/api/echo/users', usersRouter)
 
 const server = http.createServer(app)
 

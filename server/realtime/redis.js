@@ -72,3 +72,12 @@ export async function unreadCounts(userId) {
   const raw = await pub.hgetall(kUnread(userId))
   return Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, Number(v)]))
 }
+
+// Wipe every Redis trace of a user (used when their account is deleted).
+export async function purgeUserRedis(userId) {
+  await Promise.all([
+    pub.del(kPresence(userId)),
+    pub.del(kUnread(userId)),
+    pub.srem(ONLINE_SET, String(userId)),
+  ])
+}
