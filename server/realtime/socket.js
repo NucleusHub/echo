@@ -16,6 +16,13 @@ import {
 const userRoom = uid => `user:${uid}` // every socket joins its own user room
 const chatRoom = cid => `chat:${cid}`
 
+// Is this user actually a member of the chat? Used to gate every client-supplied
+// chatId before joining its room or fanning out events — without it any socket
+// could join an arbitrary chat and eavesdrop. A malformed chatId throws a
+// CastError, which we treat as "not a member".
+const isMember = (chatId, userId) =>
+  Chat.exists({ _id: chatId, members: userId }).then(Boolean).catch(() => false)
+
 export function initSocket(httpServer) {
   const io = new Server(httpServer, {
     path: '/api/echo/socket.io',
@@ -67,12 +74,14 @@ export function initSocket(httpServer) {
     })
 
     // Typing indicators are ephemeral — published to Redis, never persisted.
-    socket.on('typing:start', ({ chatId }) =>
-      publishEvent('typing', { chatId, userId, typing: true })
-    )
-    socket.on('typing:stop', ({ chatId }) =>
-      publishEvent('typing', { chatId, userId, typing: false })
-    )
+    // Gate on membership so a non-member can't inject spoofed typing events
+    // (userId is server-trusted) into a chat they don't belong to.
+    socket.on('typing:start', async ({ chatId }) => {
+      if (await isMember(chatId, userId)) publishEvent('typing', { chatId, userId, typing: true })
+    })
+    socket.on('typing:stop', async ({ chatId }) => {
+      if (await isMember(chatId, userId)) publishEvent('typing', { chatId, userId, typing: false })
+    })
 
     // Marking a chat read clears that user's unread counter.
     socket.on('chat:read', async ({ chatId }) => {
@@ -80,8 +89,12 @@ export function initSocket(httpServer) {
       io.to(userRoom(userId)).emit('unread:update', { chatId, count: 0 })
     })
 
-    // Join a chat room mid-session (e.g. just added to a group).
-    socket.on('chat:join', ({ chatId }) => socket.join(chatRoom(chatId)))
+    // Join a chat room mid-session (e.g. just added to a group). Only allow it
+    // for chats the user is actually a member of — otherwise any authenticated
+    // socket could join an arbitrary room and receive its live messages.
+    socket.on('chat:join', async ({ chatId }) => {
+      if (await isMember(chatId, userId)) socket.join(chatRoom(chatId))
+    })
     // Leave a chat room (deleted, or removed from a group).
     socket.on('chat:leave', ({ chatId }) => socket.leave(chatRoom(chatId)))
 
