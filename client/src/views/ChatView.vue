@@ -37,6 +37,8 @@ const {
 } = useEchoSocket()
 
 const sidebarOpen = ref(false)
+// Mobile-only chat-list drawer (static column on desktop, always visible there).
+const chatListOpen = ref(false)
 const chats = ref([])
 const messages = ref([])
 const activeId = ref(route.params.chatId || null)
@@ -129,6 +131,7 @@ async function loadChats() {
 
 async function openChat(id) {
   activeId.value = id
+  chatListOpen.value = false // picking a chat closes the mobile drawer
   router.replace(`/c/${id}`)
   joinChat(id)
   messages.value = await api.history(id)
@@ -173,8 +176,16 @@ async function startChat(p) {
 
 // ── Chat context menu + group management ────────────────────────────────────
 const ctxMenu = ref({ open: false, x: 0, y: 0, chat: null })
+// Keep the floating menu on-screen — the kebab sits near the right edge of the
+// (narrow) chat list, so an unclamped x would push the menu off a phone screen.
+function clampMenu(x, y, w = 190, h = 230) {
+  return {
+    x: Math.max(8, Math.min(x, window.innerWidth - w - 8)),
+    y: Math.max(8, Math.min(y, window.innerHeight - h - 8)),
+  }
+}
 function openMenu(chat, { x, y }) {
-  ctxMenu.value = { open: true, x, y, chat }
+  ctxMenu.value = { open: true, ...clampMenu(x, y), chat }
 }
 function closeMenu() {
   ctxMenu.value = { ...ctxMenu.value, open: false, chat: null }
@@ -442,10 +453,18 @@ onMounted(async () => {
     </template>
   </AppHeader>
 
-  <main class="mx-auto flex h-[calc(100vh-64px)] max-w-6xl gap-3 px-4 pb-4 pt-2 md:px-6">
-    <!-- Chat list -->
+  <main class="mx-auto flex h-[calc(100dvh-64px)] max-w-6xl gap-3 px-4 pb-4 pt-2 md:px-6">
+    <!-- Chat list. Static column on desktop; a slide-in drawer on mobile
+         (toggled from the conversation header) so you can still pick, create
+         and manage chats on a phone. -->
+    <div
+      v-if="chatListOpen"
+      class="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
+      @click="chatListOpen = false"
+    />
     <aside
-      class="hidden w-64 shrink-0 flex-col overflow-y-auto rounded-2xl border border-slate-200/70 bg-white/70 p-2 backdrop-blur-md md:flex dark:border-white/10 dark:bg-white/5"
+      class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] shrink-0 flex-col overflow-y-auto border-r border-slate-200/70 bg-white/90 p-2 backdrop-blur-xl transition-transform duration-200 md:static md:z-auto md:w-64 md:max-w-none md:translate-x-0 md:rounded-2xl md:border md:bg-white/70 md:backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 md:dark:bg-white/5"
+      :class="chatListOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
       @contextmenu.prevent="openNewMenu({ x: $event.clientX, y: $event.clientY })"
     >
       <div class="mb-1 flex items-center justify-between px-2 py-1">
@@ -512,6 +531,13 @@ onMounted(async () => {
     <!-- Conversation -->
     <section class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white/70 backdrop-blur-md dark:border-white/10 dark:bg-white/5">
       <header v-if="activeChat" class="flex items-center gap-2.5 border-b border-slate-200/70 px-4 py-3 dark:border-white/10">
+        <button
+          class="cursor-pointer -ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-black/5 hover:text-slate-900 md:hidden dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+          aria-label="Show chats"
+          @click="chatListOpen = true"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
         <AvatarCircle
           class="shrink-0"
           :name="chatAvatar(activeChat).name"
@@ -526,6 +552,17 @@ onMounted(async () => {
           </p>
         </div>
       </header>
+      <!-- Mobile: no chat selected — still give a way to open the chat list. -->
+      <div v-else class="flex items-center gap-2 border-b border-slate-200/70 px-4 py-3 md:hidden dark:border-white/10">
+        <button
+          class="cursor-pointer -ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-black/5 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+          aria-label="Show chats"
+          @click="chatListOpen = true"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <span class="font-medium text-slate-500 dark:text-white/50">Chats</span>
+      </div>
 
       <div ref="scroller" class="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">
         <EchoMessageBubble

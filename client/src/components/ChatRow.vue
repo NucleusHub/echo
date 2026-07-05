@@ -41,8 +41,8 @@ function openMenuFromButton(e) {
       class="flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500 px-1.5 text-[0.65rem] font-semibold text-white"
     >{{ unread }}</span>
     <button
-      class="cursor-pointer flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 opacity-0 transition-opacity hover:bg-black/10 hover:text-slate-700 focus:opacity-100 group-hover:opacity-100 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white"
-      :class="{ 'opacity-100': active }"
+      class="cursor-pointer flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 opacity-100 transition-opacity hover:bg-black/10 hover:text-slate-700 focus:opacity-100 md:opacity-0 md:group-hover:opacity-100 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white"
+      :class="{ 'md:opacity-100': active }"
       aria-label="Chat options"
       @click.stop="openMenuFromButton"
     >
