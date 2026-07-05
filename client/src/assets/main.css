@@ -2,6 +2,10 @@
 
 @source "../**/*.{vue,js}";
 @source "../../core/**/*.{vue,js}";
+/* App integration renderers (e.g. orbit.file attachment cards) live outside the
+   client tree at apps/<app>/echo/*.vue, reached via the client/apps symlink.
+   Without this, their Tailwind classes are purged and attachments render unstyled. */
+@source "../../apps/*/echo/**/*.{vue,js}";
 
 @custom-variant dark (&:where(.dark, .dark *));
 

@@ -2,7 +2,7 @@
   "id": "echo",
   "name": "Echo",
   "description": "Real-time messaging",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "manifestVersion": 1,
   "compatibility": {
     "nucleus": ">=0.1.0 <1.0.0"
@@ -37,6 +37,9 @@
       "APPS_DIR": "/apps",
       "JWT_SECRET": "${JWT_SECRET:-nucleus-jwt-secret}"
     },
+    "bindMounts": [
+      "../apps:/apps:ro"
+    ],
     "depends": [
       "mongo",
       "redis"
