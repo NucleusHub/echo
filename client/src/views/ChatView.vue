@@ -31,7 +31,7 @@ const { profile } = useAuth()
 const { t } = useI18n()
 const currentUserId = computed(() => (profile.value?._id ? String(profile.value._id) : null))
 
-const { registry, load: loadRegistry } = useEchoRegistry()
+const { registry, load: loadRegistry, composerActions } = useEchoRegistry()
 const {
   typingByChat, unread, connected,
   send, onMessage, onChatUpsert, onChatRemoved,
@@ -100,10 +100,9 @@ function chatAvatar(chat) {
   return { name: p?.name || displayTitle(chat), color: p?.color || '#64748b', emoji: p?.emoji || null, image: avatarUrl(p) }
 }
 
-// Composer actions for the active chat come straight from the registry — every
-// app that declared composer_actions in its manifest shows up here automatically.
-const composerActions = computed(() => registry.value.composerActions || [])
-
+// Composer actions come pre-filtered by useEchoRegistry — every app that
+// declared composer_actions shows up automatically, minus any disabled for this
+// user. (Context actions are gated the same way there.)
 const activeChat = computed(() => chats.value.find(c => c.id === activeId.value) || null)
 
 // A message ends a "group" (→ shows its timestamp + a margin below) when it's the

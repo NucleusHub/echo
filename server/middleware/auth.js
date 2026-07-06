@@ -1,20 +1,5 @@
-import jwt from 'jsonwebtoken'
-
-const secret = () => process.env.JWT_SECRET || 'nucleus-jwt-secret'
-
-// Shared with the Socket.IO handshake (realtime/socket.js) so REST and WS use
-// one identical verification path. Returns the decoded profile or throws.
-export function verifyToken(token) {
-  return jwt.verify(token, secret())
-}
-
-export function requireAuth(req, res, next) {
-  const token = req.cookies?.nucleus_token
-  if (!token) return res.status(401).json({ error: 'Unauthenticated' })
-  try {
-    req.profile = verifyToken(token)
-    next()
-  } catch {
-    res.status(401).json({ error: 'Invalid or expired token' })
-  }
-}
+// Thin re-export of the shared @core server auth (core/server/auth.js), reached
+// via the committed `server/core` symlink + the `/app/core` container mount.
+// Kept as a stable local path so existing `../middleware/auth.js` imports across
+// this app's routes (and Echo's Socket.IO handshake) keep working unchanged.
+export { requireAuth, verifyToken, verifyProfile } from '../core/server/auth.js'

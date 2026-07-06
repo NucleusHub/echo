@@ -10,6 +10,7 @@ import registryRouter from './routes/registry.js'
 import chatsRouter from './routes/chats.js'
 import messagesRouter from './routes/messages.js'
 import usersRouter from './routes/users.js'
+import { requireAppEnabled } from './core/server/appAccess.js'
 
 const app = express()
 const PORT = process.env.PORT || 3006
@@ -21,6 +22,8 @@ app.use(cookieParser())
 app.get('/api/echo/health', (_req, res) =>
   res.json({ status: 'ok', apps: registry.manifests.length })
 )
+// Refuse all Echo API access for users who have Echo disabled (admin override).
+app.use('/api/echo', requireAppEnabled('echo'))
 app.use('/api/echo/registry', registryRouter)
 app.use('/api/echo/chats', chatsRouter)
 app.use('/api/echo/messages', messagesRouter)
