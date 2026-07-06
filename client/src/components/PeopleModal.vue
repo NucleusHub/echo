@@ -75,7 +75,7 @@ function submit() {
             class="cursor-pointer flex items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-white/6"
             @click="toggle(String(p._id))"
           >
-            <AvatarCircle :name="p.name" :color="p.color" :emoji="p.emoji" :admin="p.role === 'admin'" :size="32" />
+            <AvatarCircle :profile="p" :size="32" />
             <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-900 dark:text-white">{{ p.name }}</span>
             <span
               class="flex h-5 w-5 items-center justify-center rounded-md border transition-colors"

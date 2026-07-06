@@ -14,6 +14,7 @@ defineProps({
   avatarName: { type: String, default: '?' },
   avatarColor: { type: String, default: '#64748b' },
   avatarEmoji: { type: String, default: null },
+  avatarImage: { type: String, default: null },
   unread: { type: Number, default: 0 },
 })
 const emit = defineEmits(['open', 'menu'])
@@ -34,7 +35,7 @@ function openMenuFromButton(e) {
     @keydown.enter="emit('open')"
     @contextmenu.prevent.stop="emit('menu', { x: $event.clientX, y: $event.clientY })"
   >
-    <AvatarCircle :name="avatarName" :color="avatarColor" :emoji="avatarEmoji" :size="34" class="shrink-0" />
+    <AvatarCircle :name="avatarName" :color="avatarColor" :emoji="avatarEmoji" :image="avatarImage" :size="34" class="shrink-0" />
     <div class="min-w-0 flex-1">
       <p class="truncate text-sm font-medium text-slate-900 dark:text-white">{{ title }}</p>
       <p class="truncate text-xs text-slate-500 dark:text-white/45">{{ preview || t('echo.row.noMessages') }}</p>

@@ -13,7 +13,7 @@ import MemberPickerModal from '@/components/MemberPickerModal.vue'
 import GroupDetailsModal from '@/components/GroupDetailsModal.vue'
 import EchoMessageBubble from '@core/echo/EchoMessageBubble.vue'
 import EchoComposer from '@core/echo/EchoComposer.vue'
-import { useAuth } from '@core/auth/useAuth.js'
+import { useAuth, avatarUrl } from '@core/auth/useAuth.js'
 import { useI18n } from '@core/useI18n.js'
 import { api } from '@/api/echo.js'
 import { useEchoRegistry } from '@/composables/useEchoRegistry.js'
@@ -95,9 +95,9 @@ function canManageGroup(chat) {
 }
 // Avatar props for a chat row — DMs use the other person, groups use a glyph.
 function chatAvatar(chat) {
-  if (chat.kind === 'group') return { name: displayTitle(chat), color: '#6366f1', emoji: null }
+  if (chat.kind === 'group') return { name: displayTitle(chat), color: '#6366f1', emoji: null, image: null }
   const p = profileMap.value[otherMemberId(chat)]
-  return { name: p?.name || displayTitle(chat), color: p?.color || '#64748b', emoji: p?.emoji || null }
+  return { name: p?.name || displayTitle(chat), color: p?.color || '#64748b', emoji: p?.emoji || null, image: avatarUrl(p) }
 }
 
 // Composer actions for the active chat come straight from the registry — every
@@ -489,6 +489,7 @@ onMounted(async () => {
         :avatar-name="chatAvatar(c).name"
         :avatar-color="chatAvatar(c).color"
         :avatar-emoji="chatAvatar(c).emoji"
+        :avatar-image="chatAvatar(c).image"
         :unread="unread[c.id] || 0"
         @open="openChat(c.id)"
         @menu="openMenu(c, $event)"
@@ -516,6 +517,7 @@ onMounted(async () => {
         :avatar-name="chatAvatar(c).name"
         :avatar-color="chatAvatar(c).color"
         :avatar-emoji="chatAvatar(c).emoji"
+        :avatar-image="chatAvatar(c).image"
         :unread="unread[c.id] || 0"
         @open="openChat(c.id)"
         @menu="openMenu(c, $event)"
@@ -545,6 +547,7 @@ onMounted(async () => {
           :name="chatAvatar(activeChat).name"
           :color="chatAvatar(activeChat).color"
           :emoji="chatAvatar(activeChat).emoji"
+          :image="chatAvatar(activeChat).image"
           :size="32"
         />
         <div class="min-w-0">

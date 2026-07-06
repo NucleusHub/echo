@@ -88,7 +88,7 @@ function saveName() {
         </p>
         <div class="mb-5 flex flex-col gap-0.5">
           <div v-for="m in members" :key="m._id" class="flex items-center gap-3 rounded-lg px-2 py-1.5">
-            <AvatarCircle :name="m.name" :color="m.color" :emoji="m.emoji" :admin="m.role === 'admin'" :size="34" />
+            <AvatarCircle :profile="m" :size="34" />
             <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-900 dark:text-white">
               {{ m.name }}<span v-if="String(m._id) === currentUserId" class="text-slate-400 dark:text-white/40">{{ t('echo.group.you') }}</span>
             </span>
@@ -132,7 +132,7 @@ function saveName() {
             class="cursor-pointer flex items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-white/6"
             @click="emit('add', [String(p._id)])"
           >
-            <AvatarCircle :name="p.name" :color="p.color" :emoji="p.emoji" :admin="p.role === 'admin'" :size="32" />
+            <AvatarCircle :profile="p" :size="32" />
             <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-900 dark:text-white">{{ p.name }}</span>
             <span class="flex h-6 w-6 items-center justify-center rounded-full text-indigo-500 transition-colors group-hover:bg-indigo-500/10">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
