@@ -1,13 +1,16 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import TemplateModal from '@core/TemplateModal.vue'
+import { useI18n } from '@core/useI18n.js'
+
+const { t } = useI18n()
 
 // Built on the core TemplateModal (single source of modal chrome) — it provides
 // the panel, header, close button and search box. This component only supplies
 // the body: a poster grid (`layout='grid'`, watchlist) or rows (`'list'`, goals).
 const props = defineProps({
   show: { type: Boolean, default: false },
-  title: { type: String, default: 'Share' },
+  title: { type: String, default: '' },
   items: { type: Array, default: () => [] }, // { key, title, subtitle, thumb, dot, message }
   loading: { type: Boolean, default: false },
   layout: { type: String, default: 'list' }, // 'list' | 'grid'
@@ -27,7 +30,7 @@ const filtered = computed(() => {
 <template>
   <TemplateModal
     :show="show"
-    :title="title"
+    :title="title || t('echo.share.title')"
     header
     searchable
     v-model:search="search"
@@ -42,7 +45,7 @@ const filtered = computed(() => {
     </div>
 
     <div v-else-if="!filtered.length" class="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
-      Nothing to share yet
+      {{ t('echo.share.empty') }}
     </div>
 
     <!-- Grid (posters / thumbnails) -->

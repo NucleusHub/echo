@@ -14,6 +14,7 @@ import GroupDetailsModal from '@/components/GroupDetailsModal.vue'
 import EchoMessageBubble from '@core/echo/EchoMessageBubble.vue'
 import EchoComposer from '@core/echo/EchoComposer.vue'
 import { useAuth } from '@core/auth/useAuth.js'
+import { useI18n } from '@core/useI18n.js'
 import { api } from '@/api/echo.js'
 import { useEchoRegistry } from '@/composables/useEchoRegistry.js'
 import { useEchoSocket } from '@/composables/useEchoSocket.js'
@@ -27,6 +28,7 @@ provide('echoRenderers', RENDERERS_BY_TYPE)
 const route = useRoute()
 const router = useRouter()
 const { profile } = useAuth()
+const { t } = useI18n()
 const currentUserId = computed(() => (profile.value?._id ? String(profile.value._id) : null))
 
 const { registry, load: loadRegistry } = useEchoRegistry()
@@ -79,12 +81,12 @@ function groupAutoName(chat) {
     .filter(id => id !== currentUserId.value)
     .map(id => profileMap.value[id]?.name)
     .filter(Boolean)
-  return names.length ? names.join(', ') : 'Group'
+  return names.length ? names.join(', ') : t('echo.group.fallback')
 }
 function displayTitle(chat) {
   if (!chat) return ''
   if (chat.kind === 'group') return chat.title || groupAutoName(chat)
-  return profileMap.value[otherMemberId(chat)]?.name || 'Direct message'
+  return profileMap.value[otherMemberId(chat)]?.name || t('echo.dm.fallback')
 }
 // Group management (rename / remove member / delete) is creator- or admin-only.
 function canManageGroup(chat) {
@@ -209,7 +211,7 @@ async function createGroupFromModal({ title, memberIds }) {
   await openChat(id)
 }
 
-const profileName = id => profileMap.value[id]?.name || 'someone'
+const profileName = id => profileMap.value[id]?.name || t('echo.someone')
 // Resolve a chat's member ids to profile objects, optionally excluding one id.
 function memberProfiles(chat, excludeId) {
   return (chat?.members || [])
@@ -223,7 +225,7 @@ function memberProfiles(chat, excludeId) {
 const peopleModal = ref({ open: false, chatId: null })
 const peopleChat = computed(() => chats.value.find(c => c.id === peopleModal.value.chatId) || null)
 const peopleMode = computed(() => (peopleChat.value?.kind === 'group' ? 'manage' : 'create'))
-const peopleTitle = computed(() => (peopleMode.value === 'create' ? 'New group' : 'Add people'))
+const peopleTitle = computed(() => (peopleMode.value === 'create' ? t('echo.people.newGroup') : t('echo.people.addPeople')))
 function openAddPeople(chat) {
   closeMenu()
   peopleModal.value = { open: true, chatId: chat.id }
@@ -439,7 +441,7 @@ onMounted(async () => {
     <template #left>
       <button
         class="cursor-pointer flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-black/5 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white transition-colors"
-        aria-label="Open navigation"
+        :aria-label="t('echo.nav.open')"
         @click="sidebarOpen = true"
       >
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -448,7 +450,7 @@ onMounted(async () => {
     <span class="font-semibold text-slate-900 dark:text-white">Echo</span>
     <template #right>
       <span class="text-xs" :class="connected ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400 dark:text-white/40'">
-        {{ connected ? '● live' : '○ offline' }}
+        {{ connected ? t('echo.status.live') : t('echo.status.offline') }}
       </span>
     </template>
   </AppHeader>
@@ -468,11 +470,11 @@ onMounted(async () => {
       @contextmenu.prevent="openNewMenu({ x: $event.clientX, y: $event.clientY })"
     >
       <div class="mb-1 flex items-center justify-between px-2 py-1">
-        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">Chats</span>
+        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">{{ t('echo.section.chats') }}</span>
         <button
           class="cursor-pointer flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-black/5 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
-          title="New conversation"
-          aria-label="New conversation"
+          :title="t('echo.newConversation')"
+          :aria-label="t('echo.newConversation')"
           @click="openNewChat('dm')"
         >
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -496,13 +498,13 @@ onMounted(async () => {
           class="cursor-pointer mx-2 mt-2 rounded-xl border border-dashed border-slate-300 px-3 py-3 text-center text-xs text-slate-500 transition-colors hover:bg-black/5 dark:border-white/15 dark:text-white/45 dark:hover:bg-white/5"
           @click="showNewChat = true"
       >
-        No chats yet — start one
+        {{ t('echo.empty.noChats') }}
       </button>
 
       <!-- Groupchats -->
       <div class="mt-3 border-t border-slate-200/70 pt-2 dark:border-white/10">
         <div class="mb-1 px-2 py-1">
-          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">Groupchats</span>
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">{{ t('echo.section.groupchats') }}</span>
         </div>
       </div>
       <ChatRow
@@ -523,7 +525,7 @@ onMounted(async () => {
           class="cursor-pointer mx-2 mt-2 rounded-xl border border-dashed border-slate-300 px-3 py-3 text-center text-xs text-slate-500 transition-colors hover:bg-black/5 dark:border-white/15 dark:text-white/45 dark:hover:bg-white/5"
           @click="openNewChat('group')"
       >
-        No groups yet — create one
+        {{ t('echo.empty.noGroups') }}
       </button>
 
     </aside>
@@ -533,7 +535,7 @@ onMounted(async () => {
       <header v-if="activeChat" class="flex items-center gap-2.5 border-b border-slate-200/70 px-4 py-3 dark:border-white/10">
         <button
           class="cursor-pointer -ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-black/5 hover:text-slate-900 md:hidden dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
-          aria-label="Show chats"
+          :aria-label="t('echo.section.chats')"
           @click="chatListOpen = true"
         >
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -548,7 +550,7 @@ onMounted(async () => {
         <div class="min-w-0">
           <p class="truncate font-medium text-slate-900 dark:text-white">{{ displayTitle(activeChat) }}</p>
           <p v-if="activeChat.kind === 'group'" class="text-xs text-slate-400 dark:text-white/40">
-            {{ activeChat.members.length }} members
+            {{ t('echo.members.count', { count: activeChat.members.length }) }}
           </p>
         </div>
       </header>
@@ -556,12 +558,12 @@ onMounted(async () => {
       <div v-else class="flex items-center gap-2 border-b border-slate-200/70 px-4 py-3 md:hidden dark:border-white/10">
         <button
           class="cursor-pointer -ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-black/5 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
-          aria-label="Show chats"
+          :aria-label="t('echo.section.chats')"
           @click="chatListOpen = true"
         >
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
-        <span class="font-medium text-slate-500 dark:text-white/50">Chats</span>
+        <span class="font-medium text-slate-500 dark:text-white/50">{{ t('echo.section.chats') }}</span>
       </div>
 
       <div ref="scroller" class="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">
@@ -575,12 +577,12 @@ onMounted(async () => {
           :highlight="m.id === highlightId"
         />
         <p v-if="activeId && !messages.length" class="m-auto text-sm text-slate-400 dark:text-white/40">
-          No messages yet — say hello 👋
+          {{ t('echo.empty.noMessages') }}
         </p>
-        <p v-if="!activeId" class="m-auto text-sm text-slate-400 dark:text-white/40">Select a chat to start</p>
+        <p v-if="!activeId" class="m-auto text-sm text-slate-400 dark:text-white/40">{{ t('echo.selectChat') }}</p>
       </div>
 
-      <div v-if="typingHere" class="px-4 pb-1 text-xs italic text-slate-400 dark:text-white/40">Someone is typing…</div>
+      <div v-if="typingHere" class="px-4 pb-1 text-xs italic text-slate-400 dark:text-white/40">{{ t('echo.typing') }}</div>
 
       <EchoComposer
         v-if="activeId"
@@ -637,14 +639,14 @@ onMounted(async () => {
           @click="openNewChat('dm')"
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>
-          New chat
+          {{ t('echo.menu.newChat') }}
         </button>
         <button
           class="cursor-pointer flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-slate-700 transition-colors hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10"
           @click="openNewChat('group')"
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          New group chat
+          {{ t('echo.menu.newGroup') }}
         </button>
       </div>
     </div>
@@ -663,7 +665,7 @@ onMounted(async () => {
           @click="openAddPeople(ctxMenu.chat)"
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-          Add people
+          {{ t('echo.people.addPeople') }}
         </button>
         <button
           v-if="ctxMenu.chat && ctxMenu.chat.kind === 'group' && canManageGroup(ctxMenu.chat)"
@@ -671,7 +673,7 @@ onMounted(async () => {
           @click="openDetails(ctxMenu.chat)"
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
-          Group details
+          {{ t('echo.menu.groupDetails') }}
         </button>
         <button
           v-if="ctxMenu.chat && ctxMenu.chat.kind === 'group'"
@@ -679,7 +681,7 @@ onMounted(async () => {
           @click="openLeave(ctxMenu.chat)"
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
-          Leave group
+          {{ t('echo.menu.leaveGroup') }}
         </button>
         <button
           v-if="ctxMenu.chat && (ctxMenu.chat.kind !== 'group' || canManageGroup(ctxMenu.chat))"
@@ -687,7 +689,7 @@ onMounted(async () => {
           @click="openDelete(ctxMenu.chat)"
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          Delete
+          {{ t('core.button.delete') }}
         </button>
       </div>
     </div>
@@ -701,7 +703,7 @@ onMounted(async () => {
     :profiles="profiles"
     :current-user-id="currentUserId"
     :exclude-ids="peopleChat?.members || []"
-    :submit-label="peopleMode === 'create' ? 'Create group' : 'Add'"
+    :submit-label="peopleMode === 'create' ? t('echo.people.submitCreate') : t('echo.people.submitAdd')"
     @submit="submitPeople"
     @close="closePeople"
   />
@@ -723,19 +725,19 @@ onMounted(async () => {
   <TemplateModal
     v-if="!leaveNeedsOwner"
     :show="leaveModal.open"
-    title="Leave group?"
-    message="You'll stop receiving its messages. An admin can add you back later."
-    confirm-label="Leave"
+    :title="t('echo.leave.title')"
+    :message="t('echo.leave.message')"
+    :confirm-label="t('echo.leave.confirm')"
     @confirm="confirmLeave"
     @cancel="leaveModal.open = false"
   />
   <MemberPickerModal
     v-else
     :show="leaveModal.open"
-    title="Leave group?"
-    message="You're the group admin — choose who takes over before you leave."
+    :title="t('echo.leave.title')"
+    :message="t('echo.leave.adminMessage')"
     :members="leaveOtherMembers"
-    confirm-label="Transfer & leave"
+    :confirm-label="t('echo.leave.transferConfirm')"
     danger
     @confirm="confirmLeave"
     @close="leaveModal.open = false"
@@ -744,11 +746,11 @@ onMounted(async () => {
   <!-- Delete confirmation -->
   <TemplateModal
     :show="deleteModal.open"
-    :title="deleteModal.chat?.kind === 'group' ? 'Delete group?' : 'Delete chat?'"
+    :title="deleteModal.chat?.kind === 'group' ? t('echo.delete.groupTitle') : t('echo.delete.chatTitle')"
     :message="deleteModal.chat?.kind === 'group'
-      ? 'This permanently deletes the group and its messages for everyone.'
-      : 'This permanently deletes the conversation and its messages for everyone.'"
-    confirm-label="Delete"
+      ? t('echo.delete.groupMessage')
+      : t('echo.delete.chatMessage')"
+    :confirm-label="t('core.button.delete')"
     @confirm="confirmDelete"
     @cancel="deleteModal.open = false"
   />

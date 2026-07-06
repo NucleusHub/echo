@@ -1,5 +1,8 @@
 <script setup>
 import AvatarCircle from '@core/auth/AvatarCircle.vue'
+import { useI18n } from '@core/useI18n.js'
+
+const { t } = useI18n()
 
 // A single row in the chat list. Left-click opens the chat; right-click or the
 // hover kebab (⋯) opens the context menu — both emit `menu` with screen
@@ -34,7 +37,7 @@ function openMenuFromButton(e) {
     <AvatarCircle :name="avatarName" :color="avatarColor" :emoji="avatarEmoji" :size="34" class="shrink-0" />
     <div class="min-w-0 flex-1">
       <p class="truncate text-sm font-medium text-slate-900 dark:text-white">{{ title }}</p>
-      <p class="truncate text-xs text-slate-500 dark:text-white/45">{{ preview || 'No messages yet' }}</p>
+      <p class="truncate text-xs text-slate-500 dark:text-white/45">{{ preview || t('echo.row.noMessages') }}</p>
     </div>
     <span
       v-if="unread"
@@ -43,7 +46,7 @@ function openMenuFromButton(e) {
     <button
       class="cursor-pointer flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 opacity-100 transition-opacity hover:bg-black/10 hover:text-slate-700 focus:opacity-100 md:opacity-0 md:group-hover:opacity-100 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white"
       :class="{ 'md:opacity-100': active }"
-      aria-label="Chat options"
+      :aria-label="t('echo.chatOptions')"
       @click.stop="openMenuFromButton"
     >
       <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>

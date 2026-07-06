@@ -2,6 +2,9 @@
 import { ref, computed, watch } from 'vue'
 import TemplateModal from '@core/TemplateModal.vue'
 import AvatarCircle from '@core/auth/AvatarCircle.vue'
+import { useI18n } from '@core/useI18n.js'
+
+const { t } = useI18n()
 
 // Group management hub (admin only): rename, transfer admin, remove members and
 // add new ones — all in one place. Bound to the live chat object, so changes
@@ -45,10 +48,10 @@ function saveName() {
     <div class="flex max-h-[85vh] flex-col">
       <!-- Header -->
       <div class="flex shrink-0 items-center justify-between px-5 pb-3 pt-5">
-        <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Group details</h2>
+        <h2 class="text-sm font-semibold text-slate-900 dark:text-white">{{ t('echo.menu.groupDetails') }}</h2>
         <button
           class="cursor-pointer -mr-1 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-white"
-          aria-label="Close"
+          :aria-label="t('core.button.close')"
           @click="emit('close')"
         >
           <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -57,12 +60,12 @@ function saveName() {
 
       <!-- Name field -->
       <div class="px-5 pb-4">
-        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">Group name</label>
+        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">{{ t('echo.group.name') }}</label>
         <div class="flex gap-2">
           <input
             v-model="name"
             type="text"
-            placeholder="Group name"
+            :placeholder="t('echo.group.name')"
             class="flex-1 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-white dark:placeholder:text-slate-500"
             @keydown.enter="saveName"
           />
@@ -71,7 +74,7 @@ function saveName() {
             class="cursor-pointer rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
             @click="saveName"
           >
-            Save
+            {{ t('core.button.save') }}
           </button>
         </div>
       </div>
@@ -81,23 +84,23 @@ function saveName() {
       <div class="flex-1 overflow-y-auto px-5 py-4">
         <!-- Members -->
         <p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">
-          Members ({{ members.length }})
+          {{ t('echo.group.members', { count: members.length }) }}
         </p>
         <div class="mb-5 flex flex-col gap-0.5">
           <div v-for="m in members" :key="m._id" class="flex items-center gap-3 rounded-lg px-2 py-1.5">
             <AvatarCircle :name="m.name" :color="m.color" :emoji="m.emoji" :admin="m.role === 'admin'" :size="34" />
             <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-900 dark:text-white">
-              {{ m.name }}<span v-if="String(m._id) === currentUserId" class="text-slate-400 dark:text-white/40"> (you)</span>
+              {{ m.name }}<span v-if="String(m._id) === currentUserId" class="text-slate-400 dark:text-white/40">{{ t('echo.group.you') }}</span>
             </span>
             <span
               v-if="String(m._id) === ownerId"
               class="rounded-full bg-amber-400/15 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-300"
-            >Admin</span>
+            >{{ t('echo.group.admin') }}</span>
             <button
               v-if="String(m._id) !== ownerId"
               class="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-amber-500/10 hover:text-amber-500"
-              aria-label="Make group admin"
-              title="Make group admin"
+              :aria-label="t('echo.group.makeAdmin')"
+              :title="t('echo.group.makeAdmin')"
               @click="emit('transfer', String(m._id))"
             >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V6l-9-4z"/><path d="M9 12l2 2 4-4"/></svg>
@@ -105,8 +108,8 @@ function saveName() {
             <button
               v-if="String(m._id) !== currentUserId"
               class="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-500"
-              aria-label="Remove from group"
-              title="Remove from group"
+              :aria-label="t('echo.group.removeMember')"
+              :title="t('echo.group.removeMember')"
               @click="emit('remove', String(m._id))"
             >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -115,11 +118,11 @@ function saveName() {
         </div>
 
         <!-- Add people -->
-        <p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">Add people</p>
+        <p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">{{ t('echo.people.addPeople') }}</p>
         <input
           v-model="search"
           type="text"
-          placeholder="Search people…"
+          :placeholder="t('echo.search.people')"
           class="mb-2 w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-white dark:placeholder:text-slate-500"
         />
         <div class="flex flex-col gap-0.5">
@@ -136,7 +139,7 @@ function saveName() {
             </span>
           </button>
           <p v-if="!candidates.length" class="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-            {{ search.trim() ? 'No people found' : 'Everyone is already in this group' }}
+            {{ search.trim() ? t('echo.search.noPeople') : t('echo.group.everyoneIn') }}
           </p>
         </div>
       </div>
@@ -147,7 +150,7 @@ function saveName() {
           class="cursor-pointer rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
           @click="emit('close')"
         >
-          Done
+          {{ t('echo.done') }}
         </button>
       </div>
     </div>

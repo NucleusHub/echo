@@ -1,0 +1,65 @@
+{
+  "echo.group.fallback": "Skupina",
+  "echo.dm.fallback": "Přímá zpráva",
+  "echo.someone": "někdo",
+
+  "echo.nav.open": "Otevřít navigaci",
+  "echo.status.live": "● online",
+  "echo.status.offline": "○ offline",
+  "echo.section.chats": "Chaty",
+  "echo.section.groupchats": "Skupiny",
+  "echo.newConversation": "Nový chat",
+  "echo.selectChat": "Vyberte chat",
+  "echo.typing": "Někdo píše…",
+  "echo.done": "Hotovo",
+
+  "echo.empty.noChats": "Zatím žádné chaty — začněte nový",
+  "echo.empty.noGroups": "Zatím žádné skupiny — vytvořte novou",
+  "echo.empty.noMessages": "Zatím žádné zprávy — pozdravte 👋",
+  "echo.empty.noOtherPeople": "Zatím žádní další lidé",
+  "echo.empty.nobodyToAdd": "Není koho přidat",
+
+  "echo.members.count": "{count} členů",
+
+  "echo.menu.newChat": "Nový chat",
+  "echo.menu.newGroup": "Nový skupinový chat",
+  "echo.menu.groupDetails": "Podrobnosti skupiny",
+  "echo.menu.leaveGroup": "Opustit skupinu",
+
+  "echo.people.newGroup": "Nová skupina",
+  "echo.people.addPeople": "Přidat lidi",
+  "echo.people.submitCreate": "Vytvořit skupinu",
+  "echo.people.submitAdd": "Přidat",
+
+  "echo.leave.title": "Opustit skupinu?",
+  "echo.leave.message": "Přestanete dostávat její zprávy. Správce vás může později přidat zpět.",
+  "echo.leave.confirm": "Opustit",
+  "echo.leave.adminMessage": "Jste správce skupiny — před odchodem vyberte, kdo ji převezme.",
+  "echo.leave.transferConfirm": "Předat a opustit",
+
+  "echo.delete.groupTitle": "Smazat skupinu?",
+  "echo.delete.chatTitle": "Smazat chat?",
+  "echo.delete.groupMessage": "Tímto se skupina a její zprávy trvale smažou pro všechny.",
+  "echo.delete.chatMessage": "Tímto se chat a jeho zprávy trvale smažou pro všechny.",
+
+  "echo.row.noMessages": "Zatím žádné zprávy",
+  "echo.chatOptions": "Nastavení chatu",
+
+  "echo.group.name": "Název skupiny",
+  "echo.group.namePlaceholderOptional": "Název skupiny (nepovinné)",
+  "echo.group.members": "Členové ({count})",
+  "echo.group.you": " (vy)",
+  "echo.group.admin": "Správce",
+  "echo.group.makeAdmin": "Nastavit jako správce skupiny",
+  "echo.group.removeMember": "Odebrat ze skupiny",
+  "echo.group.everyoneIn": "Všichni už jsou ve skupině",
+
+  "echo.search.people": "Hledat lidi…",
+  "echo.search.noPeople": "Nikdo nenalezen",
+
+  "echo.tab.chat": "Chat",
+  "echo.tab.groupChat": "Skupinový chat",
+
+  "echo.share.title": "Sdílet",
+  "echo.share.empty": "Zatím není co sdílet"
+}

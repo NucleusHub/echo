@@ -2,6 +2,9 @@
 import { ref, computed, watch } from 'vue'
 import TemplateModal from '@core/TemplateModal.vue'
 import AvatarCircle from '@core/auth/AvatarCircle.vue'
+import { useI18n } from '@core/useI18n.js'
+
+const { t } = useI18n()
 
 // Add-people picker, used by the "Add people" action:
 //  • mode 'create' → pick people to start a new group (from a DM)
@@ -9,13 +12,13 @@ import AvatarCircle from '@core/auth/AvatarCircle.vue'
 // (Removing members / transferring admin live in GroupDetailsModal.)
 const props = defineProps({
   show: { type: Boolean, default: false },
-  title: { type: String, default: 'Add people' },
+  title: { type: String, default: '' },
   mode: { type: String, default: 'manage' }, // 'create' | 'manage'
   profiles: { type: Array, default: () => [] },
   currentUserId: { type: String, default: null },
   // Ids already in (or seeded into) the chat — excluded from the pickable list.
   excludeIds: { type: Array, default: () => [] },
-  submitLabel: { type: String, default: 'Add' },
+  submitLabel: { type: String, default: '' },
 })
 const emit = defineEmits(['submit', 'close'])
 
@@ -48,10 +51,10 @@ function submit() {
     <div class="flex max-h-[80vh] flex-col">
       <!-- Header -->
       <div class="flex shrink-0 items-center justify-between border-b border-white/30 px-5 pb-4 pt-5 dark:border-white/8">
-        <h2 class="text-sm font-semibold text-slate-900 dark:text-white">{{ title }}</h2>
+        <h2 class="text-sm font-semibold text-slate-900 dark:text-white">{{ title || t('echo.people.addPeople') }}</h2>
         <button
           class="cursor-pointer -mr-1 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-white"
-          aria-label="Close"
+          :aria-label="t('core.button.close')"
           @click="emit('close')"
         >
           <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -62,7 +65,7 @@ function submit() {
         <input
           v-model="search"
           type="text"
-          placeholder="Search people…"
+          :placeholder="t('echo.search.people')"
           class="mb-2 w-full rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-white dark:placeholder:text-slate-500"
         />
         <div class="flex flex-col gap-0.5">
@@ -82,7 +85,7 @@ function submit() {
             </span>
           </button>
           <p v-if="!candidates.length" class="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-            {{ search.trim() ? 'No people found' : 'Nobody left to add' }}
+            {{ search.trim() ? t('echo.search.noPeople') : t('echo.empty.nobodyToAdd') }}
           </p>
         </div>
       </div>
@@ -93,14 +96,14 @@ function submit() {
           class="cursor-pointer rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:hover:text-white"
           @click="emit('close')"
         >
-          Cancel
+          {{ t('core.button.cancel') }}
         </button>
         <button
           :disabled="!selected.size"
           class="cursor-pointer rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
           @click="submit"
         >
-          {{ submitLabel }}<span v-if="selected.size"> ({{ selected.size }})</span>
+          {{ submitLabel || t('echo.people.submitAdd') }}<span v-if="selected.size"> ({{ selected.size }})</span>
         </button>
       </div>
     </div>

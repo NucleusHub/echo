@@ -1,0 +1,65 @@
+{
+  "echo.group.fallback": "Group",
+  "echo.dm.fallback": "Direct message",
+  "echo.someone": "someone",
+
+  "echo.nav.open": "Open navigation",
+  "echo.status.live": "● live",
+  "echo.status.offline": "○ offline",
+  "echo.section.chats": "Chats",
+  "echo.section.groupchats": "Groupchats",
+  "echo.newConversation": "New conversation",
+  "echo.selectChat": "Select a chat to start",
+  "echo.typing": "Someone is typing…",
+  "echo.done": "Done",
+
+  "echo.empty.noChats": "No chats yet — start one",
+  "echo.empty.noGroups": "No groups yet — create one",
+  "echo.empty.noMessages": "No messages yet — say hello 👋",
+  "echo.empty.noOtherPeople": "No other people yet",
+  "echo.empty.nobodyToAdd": "Nobody left to add",
+
+  "echo.members.count": "{count} members",
+
+  "echo.menu.newChat": "New chat",
+  "echo.menu.newGroup": "New group chat",
+  "echo.menu.groupDetails": "Group details",
+  "echo.menu.leaveGroup": "Leave group",
+
+  "echo.people.newGroup": "New group",
+  "echo.people.addPeople": "Add people",
+  "echo.people.submitCreate": "Create group",
+  "echo.people.submitAdd": "Add",
+
+  "echo.leave.title": "Leave group?",
+  "echo.leave.message": "You'll stop receiving its messages. An admin can add you back later.",
+  "echo.leave.confirm": "Leave",
+  "echo.leave.adminMessage": "You're the group admin — choose who takes over before you leave.",
+  "echo.leave.transferConfirm": "Transfer & leave",
+
+  "echo.delete.groupTitle": "Delete group?",
+  "echo.delete.chatTitle": "Delete chat?",
+  "echo.delete.groupMessage": "This permanently deletes the group and its messages for everyone.",
+  "echo.delete.chatMessage": "This permanently deletes the conversation and its messages for everyone.",
+
+  "echo.row.noMessages": "No messages yet",
+  "echo.chatOptions": "Chat options",
+
+  "echo.group.name": "Group name",
+  "echo.group.namePlaceholderOptional": "Group name (optional)",
+  "echo.group.members": "Members ({count})",
+  "echo.group.you": " (you)",
+  "echo.group.admin": "Admin",
+  "echo.group.makeAdmin": "Make group admin",
+  "echo.group.removeMember": "Remove from group",
+  "echo.group.everyoneIn": "Everyone is already in this group",
+
+  "echo.search.people": "Search people…",
+  "echo.search.noPeople": "No people found",
+
+  "echo.tab.chat": "Chat",
+  "echo.tab.groupChat": "Group chat",
+
+  "echo.share.title": "Share",
+  "echo.share.empty": "Nothing to share yet"
+}

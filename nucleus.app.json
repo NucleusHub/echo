@@ -2,7 +2,7 @@
   "id": "echo",
   "name": "Echo",
   "description": "Real-time messaging",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "manifestVersion": 1,
   "compatibility": {
     "nucleus": ">=0.1.0 <1.0.0"

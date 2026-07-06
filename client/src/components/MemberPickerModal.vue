@@ -2,6 +2,9 @@
 import { ref, watch } from 'vue'
 import TemplateModal from '@core/TemplateModal.vue'
 import AvatarCircle from '@core/auth/AvatarCircle.vue'
+import { useI18n } from '@core/useI18n.js'
+
+const { t } = useI18n()
 
 // Pick a single member from a list, then confirm. Used for choosing a successor
 // when leaving a group, and for transferring the group-admin role.
@@ -10,7 +13,7 @@ const props = defineProps({
   title: { type: String, default: '' },
   message: { type: String, default: '' },
   members: { type: Array, default: () => [] },
-  confirmLabel: { type: String, default: 'Confirm' },
+  confirmLabel: { type: String, default: '' },
   danger: { type: Boolean, default: false },
 })
 const emit = defineEmits(['confirm', 'close'])
@@ -50,7 +53,7 @@ watch(() => props.show, v => { if (v) selected.value = null })
           class="cursor-pointer rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:hover:text-white"
           @click="emit('close')"
         >
-          Cancel
+          {{ t('core.button.cancel') }}
         </button>
         <button
           :disabled="!selected"
@@ -58,7 +61,7 @@ watch(() => props.show, v => { if (v) selected.value = null })
           :class="danger ? 'bg-red-600 hover:bg-red-500' : 'bg-indigo-500 hover:bg-indigo-400'"
           @click="emit('confirm', selected)"
         >
-          {{ confirmLabel }}
+          {{ confirmLabel || t('core.button.confirm') }}
         </button>
       </div>
     </div>
