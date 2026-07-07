@@ -23,7 +23,7 @@ watch(() => props.show, v => { if (v) selected.value = null })
 </script>
 
 <template>
-  <TemplateModal :show="show" panel-class="max-w-sm" @cancel="emit('close')">
+  <TemplateModal :show="show" size="sm" @cancel="emit('close')">
     <div class="flex max-h-[80vh] flex-col">
       <div class="px-6 pb-3 pt-6">
         <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ title }}</h2>

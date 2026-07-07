@@ -56,7 +56,7 @@ function createGroup() {
 </script>
 
 <template>
-  <TemplateModal :show="show" panel-class="max-w-sm" @cancel="emit('close')">
+  <TemplateModal :show="show" size="sm" @cancel="emit('close')">
     <div class="flex max-h-[80vh] flex-col">
       <!-- Header -->
       <div class="flex shrink-0 items-center justify-between px-5 pb-4 pt-5">

@@ -34,7 +34,7 @@ const filtered = computed(() => {
     header
     searchable
     v-model:search="search"
-    :panel-class="layout === 'grid' ? 'max-w-2xl' : 'max-w-md'"
+    :size="layout === 'grid' ? 'lg' : 'md'"
     @cancel="emit('close')"
   >
     <div v-if="loading" class="flex items-center justify-center py-16">

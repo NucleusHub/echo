@@ -44,7 +44,7 @@ function saveName() {
 </script>
 
 <template>
-  <TemplateModal :show="show" panel-class="max-w-md" @cancel="emit('close')">
+  <TemplateModal :show="show" size="md" @cancel="emit('close')">
     <div class="flex max-h-[85vh] flex-col">
       <!-- Header -->
       <div class="flex shrink-0 items-center justify-between px-5 pb-3 pt-5">
