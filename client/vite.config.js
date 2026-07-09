@@ -60,6 +60,13 @@ export default defineConfig(({ mode }) => ({
         target: process.env.PULSE_TARGET || 'http://localhost:3004',
         changeOrigin: true,
       },
+      // Prism media (thumbnails + range-streamed originals) so photos/videos
+      // shared into a chat render and play in dev. (Prod nginx routes /api/prism
+      // centrally; this is dev-only.)
+      '/api/prism': {
+        target: process.env.PRISM_TARGET || 'http://localhost:3011',
+        changeOrigin: true,
+      },
     },
     allowedHosts: [process.env.NUCLEUS_HOST || 'nucleus.olm-altair.ts.net'],
   },
