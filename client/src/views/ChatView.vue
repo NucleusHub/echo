@@ -116,6 +116,15 @@ function endsGroup(i) {
   if (next.senderId !== m.senderId) return true
   return new Date(next.createdAt) - new Date(m.createdAt) > GROUP_GAP_MS
 }
+// Opens a cluster: the previous message is from someone else, is more than the
+// grouping gap earlier, or doesn't exist. Drives the bubble's corner morphing.
+function startsGroup(i) {
+  const m = messages.value[i]
+  const prev = messages.value[i - 1]
+  if (!prev) return true
+  if (prev.senderId !== m.senderId) return true
+  return new Date(m.createdAt) - new Date(prev.createdAt) > GROUP_GAP_MS
+}
 
 // Typing indicator (anyone other than me currently typing in this chat).
 const typingHere = computed(() => {
@@ -454,7 +463,8 @@ onMounted(async () => {
     </template>
   </AppHeader>
 
-  <main class="mx-auto flex h-[calc(100dvh-64px)] max-w-6xl gap-3 px-4 pb-4 pt-2 md:px-6">
+  <main class="mx-auto h-[calc(100dvh-64px)] max-w-6xl px-3 pb-4 pt-2 md:px-6">
+   <div class="flex h-full min-h-0 w-full overflow-hidden rounded-3xl border border-slate-200/70 bg-white/70 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_50px_-24px_rgba(15,23,42,0.28)] md:backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.035] dark:shadow-[0_18px_50px_-24px_rgba(0,0,0,0.7)]">
     <!-- Chat list. Static column on desktop; a slide-in drawer on mobile
          (toggled from the conversation header) so you can still pick, create
          and manage chats on a phone. -->
@@ -464,14 +474,14 @@ onMounted(async () => {
       @click="chatListOpen = false"
     />
     <aside
-      class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] shrink-0 flex-col overflow-y-auto border-r border-slate-200/70 bg-white/90 p-2 backdrop-blur-xl transition-transform duration-200 md:static md:z-auto md:w-64 md:max-w-none md:translate-x-0 md:rounded-2xl md:border md:bg-white/70 md:backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 md:dark:bg-white/5"
+      class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] shrink-0 flex-col overflow-y-auto border-r border-slate-200/70 bg-white/95 p-2.5 backdrop-blur-xl transition-transform duration-200 md:static md:z-auto md:w-72 md:max-w-none md:translate-x-0 md:bg-transparent md:backdrop-blur-none dark:border-white/10 dark:bg-slate-900/95 md:dark:bg-transparent"
       :class="chatListOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
       @contextmenu.prevent="openNewMenu({ x: $event.clientX, y: $event.clientY })"
     >
-      <div class="mb-1 flex items-center justify-between px-2 py-1">
-        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">{{ t('echo.section.chats') }}</span>
+      <div class="mb-1 mt-0.5 flex items-center justify-between px-2 py-1">
+        <span class="text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-white/40">{{ t('echo.section.chats') }}</span>
         <button
-          class="cursor-pointer flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-black/5 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+          class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-900/[0.06] hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
           :title="t('echo.newConversation')"
           :aria-label="t('echo.newConversation')"
           @click="openNewChat('dm')"
@@ -485,6 +495,7 @@ onMounted(async () => {
         :active="c.id === activeId"
         :title="displayTitle(c)"
         :preview="c.lastMessagePreview"
+        :timestamp="c.lastMessageAt"
         :avatar-name="chatAvatar(c).name"
         :avatar-color="chatAvatar(c).color"
         :avatar-emoji="chatAvatar(c).emoji"
@@ -495,17 +506,15 @@ onMounted(async () => {
       />
       <button
           v-if="!chats.length"
-          class="cursor-pointer mx-2 mt-2 rounded-xl border border-dashed border-slate-300 px-3 py-3 text-center text-xs text-slate-500 transition-colors hover:bg-black/5 dark:border-white/15 dark:text-white/45 dark:hover:bg-white/5"
+          class="mx-1 mt-1 cursor-pointer rounded-xl px-3 py-3 text-center text-xs text-slate-500 transition-colors hover:bg-slate-900/[0.035] dark:text-white/45 dark:hover:bg-white/5"
           @click="showNewChat = true"
       >
         {{ t('echo.empty.noChats') }}
       </button>
 
       <!-- Groupchats -->
-      <div class="mt-3 border-t border-slate-200/70 pt-2 dark:border-white/10">
-        <div class="mb-1 px-2 py-1">
-          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">{{ t('echo.section.groupchats') }}</span>
-        </div>
+      <div class="mb-1 mt-4 px-2 py-1">
+        <span class="text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-white/40">{{ t('echo.section.groupchats') }}</span>
       </div>
       <ChatRow
         v-for="c in groupChats"
@@ -513,6 +522,7 @@ onMounted(async () => {
         :active="c.id === activeId"
         :title="displayTitle(c)"
         :preview="c.lastMessagePreview"
+        :timestamp="c.lastMessageAt"
         :avatar-name="chatAvatar(c).name"
         :avatar-color="chatAvatar(c).color"
         :avatar-emoji="chatAvatar(c).emoji"
@@ -523,7 +533,7 @@ onMounted(async () => {
       />
       <button
           v-if="!groupChats.length"
-          class="cursor-pointer mx-2 mt-2 rounded-xl border border-dashed border-slate-300 px-3 py-3 text-center text-xs text-slate-500 transition-colors hover:bg-black/5 dark:border-white/15 dark:text-white/45 dark:hover:bg-white/5"
+          class="mx-1 mt-1 cursor-pointer rounded-xl px-3 py-3 text-center text-xs text-slate-500 transition-colors hover:bg-slate-900/[0.035] dark:text-white/45 dark:hover:bg-white/5"
           @click="openNewChat('group')"
       >
         {{ t('echo.empty.noGroups') }}
@@ -532,8 +542,8 @@ onMounted(async () => {
     </aside>
 
     <!-- Conversation -->
-    <section class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white/70 backdrop-blur-md dark:border-white/10 dark:bg-white/5">
-      <header v-if="activeChat" class="flex items-center gap-2.5 border-b border-slate-200/70 px-4 py-3 dark:border-white/10">
+    <section class="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-white/40 to-transparent dark:from-white/[0.015]">
+      <header v-if="activeChat" class="flex items-center gap-3 border-b border-slate-200/70 px-4 py-3 dark:border-white/10">
         <button
           class="cursor-pointer -ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-black/5 hover:text-slate-900 md:hidden dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
           :aria-label="t('echo.section.chats')"
@@ -568,7 +578,7 @@ onMounted(async () => {
         <span class="font-medium text-slate-500 dark:text-white/50">{{ t('echo.section.chats') }}</span>
       </div>
 
-      <div ref="scroller" class="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">
+      <div ref="scroller" class="flex flex-1 flex-col gap-0 overflow-y-auto px-4 py-5 md:px-6">
         <EchoMessageBubble
           v-for="(m, i) in messages"
           :key="m.id"
@@ -576,12 +586,26 @@ onMounted(async () => {
           :current-user-id="currentUserId"
           :sender="m.senderId ? profileMap[m.senderId] : null"
           :show-time="endsGroup(i)"
+          :first-in-group="startsGroup(i)"
+          :last-in-group="endsGroup(i)"
           :highlight="m.id === highlightId"
         />
-        <p v-if="activeId && !messages.length" class="m-auto text-sm text-slate-400 dark:text-white/40">
-          {{ t('echo.empty.noMessages') }}
-        </p>
-        <p v-if="!activeId" class="m-auto text-sm text-slate-400 dark:text-white/40">{{ t('echo.selectChat') }}</p>
+
+        <!-- Empty: chat open but no messages yet. -->
+        <div v-if="activeId && !messages.length" class="m-auto flex max-w-xs flex-col items-center gap-3 text-center">
+          <span class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 text-indigo-500 dark:text-indigo-300">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 8.5h9M7.5 12h6"/><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9.5 9.5 0 0 1-3.9-.83L3 21l1.4-4.2A8.2 8.2 0 0 1 3.5 11.5 8.38 8.38 0 0 1 12 3a8.38 8.38 0 0 1 9 8.5Z"/></svg>
+          </span>
+          <p class="text-sm font-medium text-slate-500 dark:text-white/50">{{ t('echo.empty.noMessages') }}</p>
+        </div>
+
+        <!-- No chat selected. -->
+        <div v-if="!activeId" class="m-auto flex max-w-xs flex-col items-center gap-3 px-6 text-center">
+          <span class="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 text-indigo-500 dark:text-indigo-300">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 8.5h9M7.5 12h6"/><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9.5 9.5 0 0 1-3.9-.83L3 21l1.4-4.2A8.2 8.2 0 0 1 3.5 11.5 8.38 8.38 0 0 1 12 3a8.38 8.38 0 0 1 9 8.5Z"/></svg>
+          </span>
+          <p class="text-sm text-slate-400 dark:text-white/40">{{ t('echo.selectChat') }}</p>
+        </div>
       </div>
 
       <div v-if="typingHere" class="px-4 pb-1 text-xs italic text-slate-400 dark:text-white/40">{{ t('echo.typing') }}</div>
@@ -594,6 +618,7 @@ onMounted(async () => {
         @typing="onTyping"
       />
     </section>
+   </div>
   </main>
 
   <!-- New conversation: Chat / Group chat tabs -->
