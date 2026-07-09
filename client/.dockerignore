@@ -1,0 +1,13 @@
+node_modules
+dist
+.env
+
+# Host-only symlinks (apps -> ../.., core -> ../../../core, widgets -> ../../../widgets).
+# They exist for local IDE/vite alias resolution outside Docker. If COPY'd into the
+# image they get baked in as symlinks, and the compose bind-mounts (/app/apps,
+# /app/core, /app/widgets) then follow them — /app/apps resolves to the container
+# rootfs and runc fails with "mountpoint is on the top of rootfs". The real content
+# is supplied by the read-only volume mounts at runtime, so exclude the symlinks.
+apps
+core
+widgets
