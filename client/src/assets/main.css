@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../../core/assets/motion.css";
 
 @source "../**/*.{vue,js}";
 @source "../../core/**/*.{vue,js}";

@@ -481,7 +481,7 @@ onMounted(async () => {
       <div class="mb-1 mt-0.5 flex items-center justify-between px-2 py-1">
         <span class="text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-white/40">{{ t('echo.section.chats') }}</span>
         <button
-          class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-900/[0.06] hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+          class="nuc-press flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-900/[0.06] hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
           :title="t('echo.newConversation')"
           :aria-label="t('echo.newConversation')"
           @click="openNewChat('dm')"
@@ -579,17 +579,21 @@ onMounted(async () => {
       </div>
 
       <div ref="scroller" class="flex flex-1 flex-col gap-0 overflow-y-auto px-4 py-5 md:px-6">
-        <EchoMessageBubble
-          v-for="(m, i) in messages"
-          :key="m.id"
-          :message="m"
-          :current-user-id="currentUserId"
-          :sender="m.senderId ? profileMap[m.senderId] : null"
-          :show-time="endsGroup(i)"
-          :first-in-group="startsGroup(i)"
-          :last-in-group="endsGroup(i)"
-          :highlight="m.id === highlightId"
-        />
+        <!-- No `appear`: existing history renders instantly on chat open; only
+             newly delivered/sent messages ease in from below. -->
+        <TransitionGroup name="msg">
+          <EchoMessageBubble
+            v-for="(m, i) in messages"
+            :key="m.id"
+            :message="m"
+            :current-user-id="currentUserId"
+            :sender="m.senderId ? profileMap[m.senderId] : null"
+            :show-time="endsGroup(i)"
+            :first-in-group="startsGroup(i)"
+            :last-in-group="endsGroup(i)"
+            :highlight="m.id === highlightId"
+          />
+        </TransitionGroup>
 
         <!-- Empty: chat open but no messages yet. -->
         <div v-if="activeId && !messages.length" class="m-auto flex max-w-xs flex-col items-center gap-3 text-center">
@@ -782,3 +786,17 @@ onMounted(async () => {
     @cancel="deleteModal.open = false"
   />
 </template>
+
+<style scoped>
+/* New messages ease up into place; leaving ones fade. transform-only entrance
+   keeps scroll height stable so the auto-scroll-to-bottom stays accurate. */
+.msg-enter-active { transition: opacity 0.26s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1); }
+.msg-leave-active { transition: opacity 0.16s ease; }
+.msg-enter-from { opacity: 0; transform: translateY(8px); }
+.msg-leave-to { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .msg-enter-active, .msg-leave-active { transition: opacity 0.12s ease; }
+  .msg-enter-from { transform: none; }
+}
+</style>
