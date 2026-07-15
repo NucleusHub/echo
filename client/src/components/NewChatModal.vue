@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import TemplateModal from '@core/TemplateModal.vue'
+import AppTabs from '@core/AppTabs.vue'
 import AvatarCircle from '@core/auth/AvatarCircle.vue'
 import { useI18n } from '@core/useI18n.js'
 
@@ -70,16 +71,12 @@ function createGroup() {
         </button>
       </div>
 
-      <!-- Tabs (admin-modal style) -->
-      <div class="flex gap-5 border-b border-slate-200/60 px-5 dark:border-white/10">
-        <button
-          v-for="tabDef in TABS"
-          :key="tabDef.key"
-          class="cursor-pointer -mb-px border-b-2 pb-2.5 pt-1 text-sm font-semibold transition-colors"
-          :class="tab === tabDef.key ? 'border-indigo-500 text-indigo-600 dark:text-indigo-300' : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white'"
-          @click="tab = tabDef.key"
-        >{{ tabDef.label }}</button>
-      </div>
+      <!-- Tabs -->
+      <AppTabs
+        v-model="tab"
+        :tabs="TABS"
+        class="px-5 border-b border-slate-200/60 dark:border-white/10"
+      />
 
       <div class="flex-1 overflow-y-auto px-5 py-4">
         <!-- Group name (group tab only) -->
