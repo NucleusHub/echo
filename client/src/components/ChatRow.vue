@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import AvatarCircle from '@core/auth/AvatarCircle.vue'
 import { useI18n } from '@core/useI18n.js'
+import DotsHorizontalIcon from '@/assets/icons/dots-horizontal.svg?component'
 
 const { t } = useI18n()
 
@@ -85,7 +86,7 @@ const when = computed(() => {
       :aria-label="t('echo.chatOptions')"
       @click.stop="openMenuFromButton"
     >
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      <DotsHorizontalIcon width="18" height="18" />
     </button>
   </div>
 </template>

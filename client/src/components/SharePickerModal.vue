@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import TemplateModal from '@core/TemplateModal.vue'
 import { useI18n } from '@core/useI18n.js'
+import { Icon, Spinner } from '@core/icons'
 
 const { t } = useI18n()
 
@@ -38,10 +39,7 @@ const filtered = computed(() => {
     @cancel="emit('close')"
   >
     <div v-if="loading" class="flex items-center justify-center py-16">
-      <svg class="w-7 h-7 text-indigo-500 animate-spin" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-      </svg>
+      <Spinner class="w-7 h-7 text-indigo-500 animate-spin" />
     </div>
 
     <div v-else-if="!filtered.length" class="py-16 text-center text-sm text-slate-400 dark:text-slate-500">
@@ -60,7 +58,7 @@ const filtered = computed(() => {
         <div class="aspect-[2/3] w-full overflow-hidden bg-slate-200 dark:bg-slate-700">
           <img v-if="it.thumb" :src="it.thumb" :alt="it.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
           <div v-else class="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-500">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125z" /></svg>
+            <Icon name="calendar" class="w-8 h-8" :sw="1.5" />
           </div>
         </div>
         <div class="p-2">

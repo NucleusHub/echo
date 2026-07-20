@@ -4,6 +4,7 @@ import TemplateModal from '@core/TemplateModal.vue'
 import AppTabs from '@core/AppTabs.vue'
 import AvatarCircle from '@core/auth/AvatarCircle.vue'
 import { useI18n } from '@core/useI18n.js'
+import { Icon } from '@core/icons'
 
 const { t } = useI18n()
 
@@ -67,7 +68,7 @@ function createGroup() {
           :aria-label="t('core.button.close')"
           @click="emit('close')"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          <Icon name="close" class="h-4 w-4" :sw="2.5" />
         </button>
       </div>
 
@@ -111,7 +112,7 @@ function createGroup() {
               class="flex h-5 w-5 items-center justify-center rounded-md border transition-colors"
               :class="selected.has(String(p._id)) ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-slate-300 text-transparent dark:border-white/20'"
             >
-              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              <Icon name="checkBold" class="h-3.5 w-3.5" :sw="3" />
             </span>
           </button>
           <p v-if="!candidates.length" class="py-10 text-center text-sm text-slate-400 dark:text-slate-500">

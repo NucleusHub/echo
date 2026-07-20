@@ -19,6 +19,13 @@ import { api } from '@/api/echo.js'
 import { useEchoRegistry } from '@/composables/useEchoRegistry.js'
 import { useEchoSocket } from '@/composables/useEchoSocket.js'
 import { COMPOSER_HANDLERS, RENDERERS_BY_TYPE } from '@/echo-integrations.js'
+import { Icon } from '@core/icons'
+import MessageSquareIcon from '@/assets/icons/message-square.svg?component'
+import UsersIcon from '@/assets/icons/users.svg?component'
+import UserPlusIcon from '@/assets/icons/user-plus.svg?component'
+import InfoIcon from '@/assets/icons/info.svg?component'
+import LogOutIcon from '@/assets/icons/log-out.svg?component'
+import TrashIcon from '@/assets/icons/trash.svg?component'
 
 // App-contributed message renderers (type -> component), auto-discovered from
 // each app's integration. Provided down to the core EchoCardRenderer so it can
@@ -452,7 +459,7 @@ onMounted(async () => {
         :aria-label="t('echo.nav.open')"
         @click="sidebarOpen = true"
       >
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <Icon name="menu" :sw="1.75" />
       </button>
     </template>
     <span class="font-semibold text-slate-900 dark:text-white">Echo</span>
@@ -486,7 +493,7 @@ onMounted(async () => {
           :aria-label="t('echo.newConversation')"
           @click="openNewChat('dm')"
         >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          <Icon name="plus" />
         </button>
       </div>
       <ChatRow
@@ -549,7 +556,7 @@ onMounted(async () => {
           :aria-label="t('echo.section.chats')"
           @click="chatListOpen = true"
         >
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <Icon name="menu" :sw="1.75" />
         </button>
         <AvatarCircle
           class="shrink-0"
@@ -573,7 +580,7 @@ onMounted(async () => {
           :aria-label="t('echo.section.chats')"
           @click="chatListOpen = true"
         >
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <Icon name="menu" :sw="1.75" />
         </button>
         <span class="font-medium text-slate-500 dark:text-white/50">{{ t('echo.section.chats') }}</span>
       </div>
@@ -598,7 +605,7 @@ onMounted(async () => {
         <!-- Empty: chat open but no messages yet. -->
         <div v-if="activeId && !messages.length" class="m-auto flex max-w-xs flex-col items-center gap-3 text-center">
           <span class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 text-indigo-500 dark:text-indigo-300">
-            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 8.5h9M7.5 12h6"/><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9.5 9.5 0 0 1-3.9-.83L3 21l1.4-4.2A8.2 8.2 0 0 1 3.5 11.5 8.38 8.38 0 0 1 12 3a8.38 8.38 0 0 1 9 8.5Z"/></svg>
+            <Icon name="chat" :sw="1.6" />
           </span>
           <p class="text-sm font-medium text-slate-500 dark:text-white/50">{{ t('echo.empty.noMessages') }}</p>
         </div>
@@ -606,7 +613,7 @@ onMounted(async () => {
         <!-- No chat selected. -->
         <div v-if="!activeId" class="m-auto flex max-w-xs flex-col items-center gap-3 px-6 text-center">
           <span class="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 text-indigo-500 dark:text-indigo-300">
-            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 8.5h9M7.5 12h6"/><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9.5 9.5 0 0 1-3.9-.83L3 21l1.4-4.2A8.2 8.2 0 0 1 3.5 11.5 8.38 8.38 0 0 1 12 3a8.38 8.38 0 0 1 9 8.5Z"/></svg>
+            <Icon name="chat" :sw="1.5" />
           </span>
           <p class="text-sm text-slate-400 dark:text-white/40">{{ t('echo.selectChat') }}</p>
         </div>
@@ -669,14 +676,14 @@ onMounted(async () => {
           class="cursor-pointer flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-slate-700 transition-colors hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10"
           @click="openNewChat('dm')"
         >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>
+          <MessageSquareIcon width="16" height="16" />
           {{ t('echo.menu.newChat') }}
         </button>
         <button
           class="cursor-pointer flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-slate-700 transition-colors hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10"
           @click="openNewChat('group')"
         >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <UsersIcon width="16" height="16" />
           {{ t('echo.menu.newGroup') }}
         </button>
       </div>
@@ -695,7 +702,7 @@ onMounted(async () => {
           class="cursor-pointer flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-slate-700 transition-colors hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10"
           @click="openAddPeople(ctxMenu.chat)"
         >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+          <UserPlusIcon width="16" height="16" />
           {{ t('echo.people.addPeople') }}
         </button>
         <button
@@ -703,7 +710,7 @@ onMounted(async () => {
           class="cursor-pointer flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-slate-700 transition-colors hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10"
           @click="openDetails(ctxMenu.chat)"
         >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+          <InfoIcon width="16" height="16" />
           {{ t('echo.menu.groupDetails') }}
         </button>
         <button
@@ -711,7 +718,7 @@ onMounted(async () => {
           class="cursor-pointer flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-slate-700 transition-colors hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10"
           @click="openLeave(ctxMenu.chat)"
         >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+          <LogOutIcon width="16" height="16" />
           {{ t('echo.menu.leaveGroup') }}
         </button>
         <button
@@ -719,7 +726,7 @@ onMounted(async () => {
           class="cursor-pointer flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-red-600 transition-colors hover:bg-red-500/10 dark:text-red-400"
           @click="openDelete(ctxMenu.chat)"
         >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <TrashIcon width="16" height="16" />
           {{ t('core.button.delete') }}
         </button>
       </div>

@@ -3,6 +3,8 @@ import { ref, computed, watch } from 'vue'
 import TemplateModal from '@core/TemplateModal.vue'
 import AvatarCircle from '@core/auth/AvatarCircle.vue'
 import { useI18n } from '@core/useI18n.js'
+import { Icon } from '@core/icons'
+import ShieldIcon from '@/assets/icons/shield.svg?component'
 
 const { t } = useI18n()
 
@@ -54,7 +56,7 @@ function saveName() {
           :aria-label="t('core.button.close')"
           @click="emit('close')"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          <Icon name="close" class="h-4 w-4" :sw="2.5" />
         </button>
       </div>
 
@@ -103,7 +105,7 @@ function saveName() {
               :title="t('echo.group.makeAdmin')"
               @click="emit('transfer', String(m._id))"
             >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V6l-9-4z"/><path d="M9 12l2 2 4-4"/></svg>
+              <ShieldIcon class="h-4 w-4" />
             </button>
             <button
               v-if="String(m._id) !== currentUserId"
@@ -112,7 +114,7 @@ function saveName() {
               :title="t('echo.group.removeMember')"
               @click="emit('remove', String(m._id))"
             >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              <Icon name="close" class="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -135,7 +137,7 @@ function saveName() {
             <AvatarCircle :profile="p" :size="32" />
             <span class="min-w-0 flex-1 truncate text-sm font-medium text-slate-900 dark:text-white">{{ p.name }}</span>
             <span class="flex h-6 w-6 items-center justify-center rounded-full text-indigo-500 transition-colors group-hover:bg-indigo-500/10">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              <Icon name="plus" class="h-4 w-4" />
             </span>
           </button>
           <p v-if="!candidates.length" class="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
