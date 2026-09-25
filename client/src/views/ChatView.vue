@@ -459,7 +459,7 @@ onMounted(async () => {
         :aria-label="t('echo.nav.open')"
         @click="sidebarOpen = true"
       >
-        <Icon name="menu" :sw="1.75" />
+        <Icon width="20" height="20" name="menu" :sw="1.75" />
       </button>
     </template>
     <span class="font-semibold text-slate-900 dark:text-white">Echo</span>
@@ -493,7 +493,7 @@ onMounted(async () => {
           :aria-label="t('echo.newConversation')"
           @click="openNewChat('dm')"
         >
-          <Icon name="plus" />
+          <Icon width="18" height="18" name="plus" />
         </button>
       </div>
       <ChatRow
@@ -556,7 +556,7 @@ onMounted(async () => {
           :aria-label="t('echo.section.chats')"
           @click="chatListOpen = true"
         >
-          <Icon name="menu" :sw="1.75" />
+          <Icon width="20" height="20" name="menu" :sw="1.75" />
         </button>
         <AvatarCircle
           class="shrink-0"
@@ -580,7 +580,7 @@ onMounted(async () => {
           :aria-label="t('echo.section.chats')"
           @click="chatListOpen = true"
         >
-          <Icon name="menu" :sw="1.75" />
+          <Icon width="20" height="20" name="menu" :sw="1.75" />
         </button>
         <span class="font-medium text-slate-500 dark:text-white/50">{{ t('echo.section.chats') }}</span>
       </div>
@@ -605,7 +605,7 @@ onMounted(async () => {
         <!-- Empty: chat open but no messages yet. -->
         <div v-if="activeId && !messages.length" class="m-auto flex max-w-xs flex-col items-center gap-3 text-center">
           <span class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 text-indigo-500 dark:text-indigo-300">
-            <Icon name="chat" :sw="1.6" />
+            <Icon width="26" height="26" name="chat" :sw="1.6" />
           </span>
           <p class="text-sm font-medium text-slate-500 dark:text-white/50">{{ t('echo.empty.noMessages') }}</p>
         </div>
@@ -613,7 +613,7 @@ onMounted(async () => {
         <!-- No chat selected. -->
         <div v-if="!activeId" class="m-auto flex max-w-xs flex-col items-center gap-3 px-6 text-center">
           <span class="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 text-indigo-500 dark:text-indigo-300">
-            <Icon name="chat" :sw="1.5" />
+            <Icon width="30" height="30" name="chat" :sw="1.5" />
           </span>
           <p class="text-sm text-slate-400 dark:text-white/40">{{ t('echo.selectChat') }}</p>
         </div>
