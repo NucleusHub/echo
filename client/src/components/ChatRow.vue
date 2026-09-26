@@ -6,9 +6,6 @@ import DotsHorizontalIcon from '@/assets/icons/dots-horizontal.svg?component'
 
 const { t } = useI18n()
 
-// A single row in the chat list. Left-click opens the chat; right-click or the
-// hover kebab (⋯) opens the context menu — both emit `menu` with screen
-// coordinates so the parent can position one shared menu.
 const props = defineProps({
   active: { type: Boolean, default: false },
   title: { type: String, default: '' },
@@ -27,8 +24,6 @@ function openMenuFromButton(e) {
   emit('menu', { x: r.right, y: r.bottom })
 }
 
-// Compact recency: time for today, weekday this week, else a short date. Keeps
-// the row scannable — you read "when" at a glance without a full timestamp.
 const when = computed(() => {
   if (!props.timestamp) return ''
   const d = new Date(props.timestamp)
@@ -54,7 +49,6 @@ const when = computed(() => {
     @keydown.enter="emit('open')"
     @contextmenu.prevent.stop="emit('menu', { x: $event.clientX, y: $event.clientY })"
   >
-    <!-- Active accent bar -->
     <span
       class="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500 transition-opacity duration-150"
       :class="active ? 'opacity-100' : 'opacity-0'"
@@ -79,8 +73,6 @@ const when = computed(() => {
       </div>
     </div>
 
-    <!-- Kebab: hover-reveal on desktop, always present on touch. Overlays the
-         time/unread column only while hovering, so the resting row stays clean. -->
     <button
       class="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg bg-white/70 text-slate-400 opacity-0 shadow-sm backdrop-blur-sm transition-opacity hover:text-slate-700 focus:opacity-100 group-hover:opacity-100 dark:bg-slate-800/70 dark:text-white/50 dark:hover:text-white [@media(hover:none)]:opacity-100"
       :aria-label="t('echo.chatOptions')"

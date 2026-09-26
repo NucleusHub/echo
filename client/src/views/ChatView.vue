@@ -27,9 +27,6 @@ import InfoIcon from '@/assets/icons/info.svg?component'
 import LogOutIcon from '@/assets/icons/log-out.svg?component'
 import TrashIcon from '@/assets/icons/trash.svg?component'
 
-// App-contributed message renderers (type -> component), auto-discovered from
-// each app's integration. Provided down to the core EchoCardRenderer so it can
-// resolve app types without core ever importing an app.
 provide('echoRenderers', RENDERERS_BY_TYPE)
 
 const route = useRoute()
@@ -46,26 +43,19 @@ const {
 } = useEchoSocket()
 
 const sidebarOpen = ref(false)
-// Mobile-only chat-list drawer (static column on desktop, always visible there).
 const chatListOpen = ref(false)
 const chats = ref([])
 const messages = ref([])
 const activeId = ref(route.params.chatId || null)
 const scroller = ref(null)
 
-// Deep-linking to a specific message (e.g. from the dashboard widget's
-// attachment link: /echo/c/<chatId>?msg=<id>). `pendingHighlight` is the id to
-// jump to once that chat's history loads; `highlightId` drives the transient
-// highlight pulse on the matching bubble.
 const pendingHighlight = ref(null)
 const highlightId = ref(null)
 
-// People you can start a chat with (all profiles except yourself).
 const profiles = ref([])
 const creating = ref(false)
 const profileMap = computed(() => Object.fromEntries(profiles.value.map(p => [String(p._id), p])))
 
-// "New conversation" modal — opens on the Chat or Group-chat tab.
 const showNewChat = ref(false)
 const newChatTab = ref('dm')
 function openNewChat(tab) {
@@ -74,15 +64,12 @@ function openNewChat(tab) {
   showNewChat.value = true
 }
 
-// Split the chat list into 1:1 DMs and groups for the two sidebar sections.
 const dmChats = computed(() => chats.value.filter(c => c.kind !== 'group'))
 const groupChats = computed(() => chats.value.filter(c => c.kind === 'group'))
 
-// DMs have no title — show the other member's name (resolved from profiles).
 function otherMemberId(chat) {
   return chat.members.find(m => m !== currentUserId.value) || chat.members[0]
 }
-// Group with no explicit name falls back to the members' names.
 function groupAutoName(chat) {
   const names = chat.members
     .filter(id => id !== currentUserId.value)
@@ -95,26 +82,18 @@ function displayTitle(chat) {
   if (chat.kind === 'group') return chat.title || groupAutoName(chat)
   return profileMap.value[otherMemberId(chat)]?.name || t('echo.dm.fallback')
 }
-// Group management (rename / remove member / delete) is creator- or admin-only.
 function canManageGroup(chat) {
   if (!chat || chat.kind !== 'group') return false
   return profile.value?.role === 'admin' || chat.createdBy === currentUserId.value
 }
-// Avatar props for a chat row — DMs use the other person, groups use a glyph.
 function chatAvatar(chat) {
   if (chat.kind === 'group') return { name: displayTitle(chat), color: '#6366f1', emoji: null, image: null }
   const p = profileMap.value[otherMemberId(chat)]
   return { name: p?.name || displayTitle(chat), color: p?.color || '#64748b', emoji: p?.emoji || null, image: avatarUrl(p) }
 }
 
-// Composer actions come pre-filtered by useEchoRegistry — every app that
-// declared composer_actions shows up automatically, minus any disabled for this
-// user. (Context actions are gated the same way there.)
 const activeChat = computed(() => chats.value.find(c => c.id === activeId.value) || null)
 
-// A message ends a "group" (→ shows its timestamp + a margin below) when it's the
-// last message, the next one is from a different sender, or the next one is more
-// than 10 minutes later. So a burst from one person collapses under one time.
 const GROUP_GAP_MS = 10 * 60 * 1000
 function endsGroup(i) {
   const m = messages.value[i]
@@ -123,8 +102,6 @@ function endsGroup(i) {
   if (next.senderId !== m.senderId) return true
   return new Date(next.createdAt) - new Date(m.createdAt) > GROUP_GAP_MS
 }
-// Opens a cluster: the previous message is from someone else, is more than the
-// grouping gap earlier, or doesn't exist. Drives the bubble's corner morphing.
 function startsGroup(i) {
   const m = messages.value[i]
   const prev = messages.value[i - 1]
@@ -133,7 +110,6 @@ function startsGroup(i) {
   return new Date(m.createdAt) - new Date(prev.createdAt) > GROUP_GAP_MS
 }
 
-// Typing indicator (anyone other than me currently typing in this chat).
 const typingHere = computed(() => {
   const set = typingByChat.value[activeId.value]
   if (!set) return false
@@ -142,19 +118,17 @@ const typingHere = computed(() => {
 
 async function loadChats() {
   chats.value = await api.chats()
-  // seed unread from the REST snapshot
   for (const c of chats.value) unread.value = { ...unread.value, [c.id]: c.unread }
 }
 
 async function openChat(id) {
   activeId.value = id
-  chatListOpen.value = false // picking a chat closes the mobile drawer
+  chatListOpen.value = false
   router.replace(`/c/${id}`)
   joinChat(id)
   messages.value = await api.history(id)
   markRead(id)
   unread.value = { ...unread.value, [id]: 0 }
-  // If we arrived via a message deep-link, jump to & highlight it; else bottom.
   const target = pendingHighlight.value
   pendingHighlight.value = null
   if (target && messages.value.some(m => m.id === target)) await focusMessage(target)
@@ -166,7 +140,6 @@ async function scrollToBottom() {
   if (scroller.value) scroller.value.scrollTop = scroller.value.scrollHeight
 }
 
-// Scroll a message into view and pulse-highlight it for a couple of seconds.
 async function focusMessage(id) {
   await nextTick()
   const el = document.getElementById(`echo-msg-${id}`)
@@ -176,8 +149,6 @@ async function focusMessage(id) {
   setTimeout(() => { if (highlightId.value === id) highlightId.value = null }, 2600)
 }
 
-// Start (or reopen) a DM with a profile. The backend dedupes on the member pair,
-// so picking someone you already have a chat with just reopens it.
 async function startChat(p) {
   if (creating.value) return
   creating.value = true
@@ -191,10 +162,7 @@ async function startChat(p) {
   }
 }
 
-// ── Chat context menu + group management ────────────────────────────────────
 const ctxMenu = ref({ open: false, x: 0, y: 0, chat: null })
-// Keep the floating menu on-screen — the kebab sits near the right edge of the
-// (narrow) chat list, so an unclamped x would push the menu off a phone screen.
 function clampMenu(x, y, w = 190, h = 230) {
   return {
     x: Math.max(8, Math.min(x, window.innerWidth - w - 8)),
@@ -208,7 +176,6 @@ function closeMenu() {
   ctxMenu.value = { ...ctxMenu.value, open: false, chat: null }
 }
 
-// "Chats" header menu — New chat / New group chat.
 const newMenu = ref({ open: false, x: 0, y: 0 })
 function openNewMenu({ x, y }) {
   newMenu.value = { open: true, x, y }
@@ -217,7 +184,6 @@ function closeNewMenu() {
   newMenu.value = { ...newMenu.value, open: false }
 }
 
-// Create a group straight from the New-conversation modal's "Group chat" tab.
 async function createGroupFromModal({ title, memberIds }) {
   if (!memberIds?.length) return
   const { id } = await api.createChat({ kind: 'group', title, members: memberIds })
@@ -227,7 +193,6 @@ async function createGroupFromModal({ title, memberIds }) {
 }
 
 const profileName = id => profileMap.value[id]?.name || t('echo.someone')
-// Resolve a chat's member ids to profile objects, optionally excluding one id.
 function memberProfiles(chat, excludeId) {
   return (chat?.members || [])
     .filter(id => id !== excludeId)
@@ -235,8 +200,6 @@ function memberProfiles(chat, excludeId) {
     .filter(Boolean)
 }
 
-// "Add people" picker — mode 'create' (group from a DM) vs 'manage' (add to a
-// group). Derives its live chat from the list so membership reflects instantly.
 const peopleModal = ref({ open: false, chatId: null })
 const peopleChat = computed(() => chats.value.find(c => c.id === peopleModal.value.chatId) || null)
 const peopleMode = computed(() => (peopleChat.value?.kind === 'group' ? 'manage' : 'create'))
@@ -255,7 +218,6 @@ async function submitPeople(pickedIds) {
     await api.addMembers(chat.id, pickedIds)
     closePeople()
   } else {
-    // DM → start a fresh group seeded with both DM members + the picked people.
     const members = [...new Set([...chat.members, ...pickedIds])].filter(id => id !== currentUserId.value)
     const { id } = await api.createChat({ kind: 'group', members })
     closePeople()
@@ -264,8 +226,6 @@ async function submitPeople(pickedIds) {
   }
 }
 
-// Group details hub (admin only): rename, add, remove, transfer admin. Bound to
-// the live chat so edits reflect immediately as the registry broadcasts back.
 const detailsModal = ref({ open: false, chatId: null })
 const detailsChat = computed(() => chats.value.find(c => c.id === detailsModal.value.chatId) || null)
 function openDetails(chat) {
@@ -287,21 +247,15 @@ async function detailsRemove(memberId) {
 async function detailsTransfer(memberId) {
   if (!detailsChat.value) return
   await api.transferOwner(detailsChat.value.id, memberId, profileName(memberId))
-  // You just handed admin to someone else, so you can no longer manage this group
-  // — close the details modal. Global admins (role 'admin') keep access via
-  // canManageGroup, so leave it open for them.
   if (profile.value?.role !== 'admin') closeDetails()
 }
 
-// Leave a group (any member, anytime — removes only yourself).
 const leaveModal = ref({ open: false, chat: null })
 function openLeave(chat) {
   closeMenu()
   leaveModal.value = { open: true, chat }
 }
-// Successor candidates when I own the group (everyone but me).
 const leaveOtherMembers = computed(() => memberProfiles(leaveModal.value.chat, currentUserId.value))
-// I own the group and there's more than one possible successor → let me pick.
 const leaveNeedsOwner = computed(() => {
   const chat = leaveModal.value.chat
   return !!chat && chat.createdBy === currentUserId.value && leaveOtherMembers.value.length >= 2
@@ -309,11 +263,9 @@ const leaveNeedsOwner = computed(() => {
 async function confirmLeave(ownerId = null) {
   const chat = leaveModal.value.chat
   leaveModal.value = { open: false, chat: null }
-  // The server broadcasts chat:removed back to me → onChatRemoved cleans up.
   if (chat) await api.leaveGroup(chat.id, ownerId, ownerId ? profileName(ownerId) : null)
 }
 
-// Delete a chat (for everyone).
 const deleteModal = ref({ open: false, chat: null })
 function openDelete(chat) {
   closeMenu()
@@ -325,20 +277,12 @@ async function confirmDelete() {
   if (chat) await api.deleteChat(chat.id)
 }
 
-// Outgoing text (and any app-typed message routed through here).
 async function handleSend(message) {
   if (!activeId.value) return
   await send(activeId.value, message)
-  // The server fan-out (message:new) delivers our own message back, so we don't
-  // optimistically append here — keeps a single source of truth.
+  // The server fan-out echoes our own message back, so no optimistic append.
 }
 
-// ── Composer actions (fully app-agnostic) ───────────────────────────────────
-// Every composer button comes from the registry (an app's manifest); its
-// behaviour comes from that app's integration, auto-discovered in
-// echo-integrations.js. A handler is either `{ source }` (Echo's generic
-// list/grid picker) or `{ picker, toMessage }` (the app's own picker component).
-// Echo wires the two together here and knows nothing about any specific app.
 const sharePicker = ref({ open: false, title: '', items: [], loading: false, layout: 'list' })
 const customPicker = ref({ open: false, component: null, toMessage: null })
 
@@ -351,13 +295,11 @@ async function handleAction(action) {
   const def = COMPOSER_HANDLERS[`${action.app}:${action.id}`]
   if (!def) return
 
-  // App-supplied picker component (e.g. Orbit's drive tree).
   if (def.picker) {
     customPicker.value = { open: true, component: markRaw(def.picker), toMessage: def.toMessage }
     return
   }
 
-  // Generic share picker: load the app's items and map each to a picker row.
   if (def.source) {
     sharePicker.value = { open: true, title: def.source.title, items: [], loading: true, layout: def.source.layout || 'list' }
     try {
@@ -376,8 +318,6 @@ async function pickShare(item) {
   await send(activeId.value, item.message)
 }
 
-// An app picker emitted a selection → its integration's toMessage builds the
-// app-typed message Echo sends.
 async function pickCustom(selection) {
   const toMessage = customPicker.value.toMessage
   closeCustomPicker()
@@ -393,7 +333,6 @@ function onTyping() {
   typingTimer = setTimeout(() => stopTyping(activeId.value), 1500)
 }
 
-// Live incoming messages.
 onMessage(msg => {
   if (msg.chatId === activeId.value) {
     messages.value = [...messages.value, msg]
@@ -408,19 +347,17 @@ onMessage(msg => {
   }
 })
 
-// A chat I'm in was created / renamed / had its membership change.
 onChatUpsert(chat => {
   const existing = chats.value.find(c => c.id === chat.id)
   if (existing) {
-    // The upsert carries unread:0 — keep our locally-tracked count.
+    // The upsert carries unread:0; keep the locally tracked count.
     Object.assign(existing, chat, { unread: existing.unread })
   } else {
     chats.value = [{ ...chat }, ...chats.value]
-    joinChat(chat.id) // start receiving its realtime messages
+    joinChat(chat.id)
   }
 })
 
-// A chat was deleted, or I was removed from it.
 onChatRemoved(chatId => {
   leaveChat(chatId)
   chats.value = chats.value.filter(c => c.id !== chatId)
@@ -437,7 +374,7 @@ onChatRemoved(chatId => {
 watch(() => route.params.chatId, id => { if (id && id !== activeId.value) openChat(id) })
 
 onMounted(async () => {
-  // Capture the deep-link target before openChat() strips the query via replace().
+  // Capture before openChat() strips the query.
   pendingHighlight.value = route.query.msg ? String(route.query.msg) : null
   await Promise.all([
     loadRegistry(),
@@ -472,9 +409,6 @@ onMounted(async () => {
 
   <main class="mx-auto h-[calc(100dvh-64px)] max-w-6xl px-3 pb-4 pt-2 md:px-6">
    <div class="flex h-full min-h-0 w-full overflow-hidden rounded-3xl border border-slate-200/70 bg-white/70 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_50px_-24px_rgba(15,23,42,0.28)] md:backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.035] dark:shadow-[0_18px_50px_-24px_rgba(0,0,0,0.7)]">
-    <!-- Chat list. Static column on desktop; a slide-in drawer on mobile
-         (toggled from the conversation header) so you can still pick, create
-         and manage chats on a phone. -->
     <div
       v-if="chatListOpen"
       class="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
@@ -519,7 +453,6 @@ onMounted(async () => {
         {{ t('echo.empty.noChats') }}
       </button>
 
-      <!-- Groupchats -->
       <div class="mb-1 mt-4 px-2 py-1">
         <span class="text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-white/40">{{ t('echo.section.groupchats') }}</span>
       </div>
@@ -548,7 +481,6 @@ onMounted(async () => {
 
     </aside>
 
-    <!-- Conversation -->
     <section class="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-white/40 to-transparent dark:from-white/[0.015]">
       <header v-if="activeChat" class="flex items-center gap-3 border-b border-slate-200/70 px-4 py-3 dark:border-white/10">
         <button
@@ -573,7 +505,6 @@ onMounted(async () => {
           </p>
         </div>
       </header>
-      <!-- Mobile: no chat selected — still give a way to open the chat list. -->
       <div v-else class="flex items-center gap-2 border-b border-slate-200/70 px-4 py-3 md:hidden dark:border-white/10">
         <button
           class="cursor-pointer -ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-black/5 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
@@ -586,8 +517,6 @@ onMounted(async () => {
       </div>
 
       <div ref="scroller" class="flex flex-1 flex-col gap-0 overflow-y-auto px-4 py-5 md:px-6">
-        <!-- No `appear`: existing history renders instantly on chat open; only
-             newly delivered/sent messages ease in from below. -->
         <TransitionGroup name="msg">
           <EchoMessageBubble
             v-for="(m, i) in messages"
@@ -602,7 +531,6 @@ onMounted(async () => {
           />
         </TransitionGroup>
 
-        <!-- Empty: chat open but no messages yet. -->
         <div v-if="activeId && !messages.length" class="m-auto flex max-w-xs flex-col items-center gap-3 text-center">
           <span class="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 text-indigo-500 dark:text-indigo-300">
             <Icon width="26" height="26" name="chat" :sw="1.6" />
@@ -610,7 +538,6 @@ onMounted(async () => {
           <p class="text-sm font-medium text-slate-500 dark:text-white/50">{{ t('echo.empty.noMessages') }}</p>
         </div>
 
-        <!-- No chat selected. -->
         <div v-if="!activeId" class="m-auto flex max-w-xs flex-col items-center gap-3 px-6 text-center">
           <span class="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 text-indigo-500 dark:text-indigo-300">
             <Icon width="30" height="30" name="chat" :sw="1.5" />
@@ -632,7 +559,6 @@ onMounted(async () => {
    </div>
   </main>
 
-  <!-- New conversation: Chat / Group chat tabs -->
   <NewChatModal
     :show="showNewChat"
     :profiles="profiles"
@@ -643,7 +569,6 @@ onMounted(async () => {
     @close="showNewChat = false"
   />
 
-  <!-- Share picker: items from the originating app (Orbit / Goals / Watchlist) -->
   <SharePickerModal
     :show="sharePicker.open"
     :title="sharePicker.title"
@@ -654,8 +579,6 @@ onMounted(async () => {
     @close="sharePicker.open = false"
   />
 
-  <!-- App-supplied picker (e.g. Orbit drive tree) — mounted generically from the
-       active composer action's integration; emits a selection Echo turns into a message. -->
   <component
     :is="customPicker.component"
     v-if="customPicker.component"
@@ -664,7 +587,6 @@ onMounted(async () => {
     @close="closeCustomPicker"
   />
 
-  <!-- "Chats" header menu: New chat / New group chat -->
   <Teleport to="body">
     <div v-if="newMenu.open" class="fixed inset-0 z-[150]" @pointerdown="closeNewMenu" @contextmenu.prevent="closeNewMenu">
       <div
@@ -690,7 +612,6 @@ onMounted(async () => {
     </div>
   </Teleport>
 
-  <!-- Chat context menu (right-click or kebab) -->
   <Teleport to="body">
     <div v-if="ctxMenu.open" class="fixed inset-0 z-[150]" @pointerdown="closeMenu" @contextmenu.prevent="closeMenu">
       <div
@@ -733,7 +654,6 @@ onMounted(async () => {
     </div>
   </Teleport>
 
-  <!-- Add people (quick action — also creates a group from a DM) -->
   <PeopleModal
     :show="peopleModal.open"
     :title="peopleTitle"
@@ -746,7 +666,6 @@ onMounted(async () => {
     @close="closePeople"
   />
 
-  <!-- Group details (admin): rename, members, transfer admin, add people -->
   <GroupDetailsModal
     :show="detailsModal.open"
     :chat="detailsChat"
@@ -759,7 +678,6 @@ onMounted(async () => {
     @close="closeDetails"
   />
 
-  <!-- Leave group confirmation (owners pick a successor first) -->
   <TemplateModal
     v-if="!leaveNeedsOwner"
     :show="leaveModal.open"
@@ -781,7 +699,6 @@ onMounted(async () => {
     @close="leaveModal.open = false"
   />
 
-  <!-- Delete confirmation -->
   <TemplateModal
     :show="deleteModal.open"
     :title="deleteModal.chat?.kind === 'group' ? t('echo.delete.groupTitle') : t('echo.delete.chatTitle')"
@@ -795,8 +712,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* New messages ease up into place; leaving ones fade. transform-only entrance
-   keeps scroll height stable so the auto-scroll-to-bottom stays accurate. */
 .msg-enter-active { transition: opacity 0.26s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1); }
 .msg-leave-active { transition: opacity 0.16s ease; }
 .msg-enter-from { opacity: 0; transform: translateY(8px); }

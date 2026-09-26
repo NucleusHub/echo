@@ -15,13 +15,6 @@ function preview(type, payload) {
   return `[${type}]`
 }
 
-// The one place a message is created. Used by both the REST route and the
-// Socket.IO gateway so the persist → publish → fan-out flow is identical
-// regardless of transport.
-//
-// Flow:  validate type against the unified registry → write to Mongo →
-//        bump per-recipient unread (Redis) → publish to Redis → (the subscriber
-//        in realtime/socket.js relays it to every connected member).
 export async function createMessage({ chatId, senderId, type = 'text', payload = {} }) {
   if (!registry.isKnownType(type)) {
     throw new MessageError(`Unknown message type "${type}" — no app registered it`, 422)
@@ -45,7 +38,6 @@ export async function createMessage({ chatId, senderId, type = 'text', payload =
   chat.lastMessagePreview = preview(type, payload)
   await chat.save()
 
-  // Per-recipient unread bump (everyone except the sender).
   await Promise.all(
     chat.members
       .filter(m => !senderId || !m.equals(senderId))

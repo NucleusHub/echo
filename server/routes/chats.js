@@ -11,8 +11,6 @@ router.use(requireAuth)
 const me = req => req.profile.profileId
 const isAdmin = req => req.profile.role === 'admin'
 
-// Group management (rename / remove member / delete) is restricted to the
-// group's creator or a Nucleus admin — the same rule across the board.
 function canManage(chat, req) {
   return isAdmin(req) || (chat.createdBy && chat.createdBy.equals(me(req)))
 }
@@ -31,16 +29,12 @@ function serializeChat(c, unread = 0) {
   }
 }
 
-// Tell every member (incl. new ones) a chat appeared or changed; the socket
-// layer routes this to each member's personal room so their list updates live.
 const broadcastUpsert = chat =>
   publishEvent('chat:upsert', { chat: serializeChat(chat), members: chat.members.map(String) })
 
-// Post an automated "system" notice into a chat (member joins, renames, …).
 const systemNotice = (chatId, text) =>
   createMessage({ chatId, senderId: null, type: 'system', payload: { text } })
 
-// List my chats, newest activity first, annotated with unread counts.
 router.get('/', async (req, res) => {
   const userId = me(req)
   const [chats, unread] = await Promise.all([
@@ -50,8 +44,6 @@ router.get('/', async (req, res) => {
   res.json(chats.map(c => serializeChat(c, unread[String(c._id)] || 0)))
 })
 
-// Create a chat. For DMs we dedupe on the exact member pair; groups are always
-// fresh. "Add people" on a DM lands here with kind:'group'.
 router.post('/', async (req, res) => {
   const userId = me(req)
   const { kind = 'dm', title = '', members = [] } = req.body
@@ -67,7 +59,6 @@ router.post('/', async (req, res) => {
   res.status(201).json({ id: String(chat._id) })
 })
 
-// Rename a group (creator/admin only).
 router.patch('/:id', async (req, res) => {
   const chat = await Chat.findById(req.params.id)
   if (!chat) return res.status(404).json({ error: 'Chat not found' })
@@ -85,7 +76,6 @@ router.patch('/:id', async (req, res) => {
   res.json(serializeChat(chat))
 })
 
-// Add people to a group (any member may add).
 router.post('/:id/members', async (req, res) => {
   const chat = await Chat.findById(req.params.id)
   if (!chat) return res.status(404).json({ error: 'Chat not found' })
@@ -105,7 +95,6 @@ router.post('/:id/members', async (req, res) => {
   res.json(serializeChat(chat))
 })
 
-// Remove a person from a group (creator/admin only).
 router.delete('/:id/members/:memberId', async (req, res) => {
   const chat = await Chat.findById(req.params.id)
   if (!chat) return res.status(404).json({ error: 'Chat not found' })
@@ -119,13 +108,12 @@ router.delete('/:id/members/:memberId', async (req, res) => {
   chat.members = chat.members.filter(m => !m.equals(target))
   await chat.save()
   await clearUnread(target, chat._id)
-  broadcastUpsert(chat) // remaining members refresh
-  publishEvent('chat:removed', { chatId: String(chat._id), members: [target] }) // removed user drops it
+  broadcastUpsert(chat)
+  publishEvent('chat:removed', { chatId: String(chat._id), members: [target] })
   await systemNotice(chat._id, `${req.profile.name} removed a member`)
   res.json(serializeChat(chat))
 })
 
-// Transfer the group admin role to another member (current owner/admin only).
 router.post('/:id/owner', async (req, res) => {
   const chat = await Chat.findById(req.params.id)
   if (!chat) return res.status(404).json({ error: 'Chat not found' })
@@ -144,7 +132,6 @@ router.post('/:id/owner', async (req, res) => {
   res.json(serializeChat(chat))
 })
 
-// Leave a group — any member may leave at any time (removes only themselves).
 router.post('/:id/leave', async (req, res) => {
   const chat = await Chat.findById(req.params.id)
   if (!chat) return res.status(404).json({ error: 'Chat not found' })
@@ -155,7 +142,6 @@ router.post('/:id/leave', async (req, res) => {
   chat.members = chat.members.filter(m => !m.equals(meId))
   await clearUnread(meId, chat._id)
 
-  // Last member out → delete the group and its messages entirely.
   if (!chat.members.length) {
     await Message.deleteMany({ chatId: chat._id })
     await chat.deleteOne()
@@ -163,8 +149,6 @@ router.post('/:id/leave', async (req, res) => {
     return res.json({ ok: true })
   }
 
-  // If the owner leaves, hand ownership to the member they chose (must still be
-  // in the group); fall back to the first remaining member.
   let transferred = false
   if (chat.createdBy && chat.createdBy.equals(meId)) {
     const { newOwnerId } = req.body || {}
@@ -173,8 +157,8 @@ router.post('/:id/leave', async (req, res) => {
     transferred = true
   }
   await chat.save()
-  broadcastUpsert(chat) // remaining members refresh
-  publishEvent('chat:removed', { chatId: String(chat._id), members: [String(meId)] }) // I drop it
+  broadcastUpsert(chat)
+  publishEvent('chat:removed', { chatId: String(chat._id), members: [String(meId)] })
   await systemNotice(chat._id, `${req.profile.name} left the group`)
   if (transferred) {
     const { newOwnerName } = req.body || {}
@@ -183,7 +167,6 @@ router.post('/:id/leave', async (req, res) => {
   res.json({ ok: true })
 })
 
-// Delete a chat for everyone (DM: either participant; group: creator/admin).
 router.delete('/:id', async (req, res) => {
   const chat = await Chat.findById(req.params.id)
   if (!chat) return res.status(404).json({ error: 'Chat not found' })

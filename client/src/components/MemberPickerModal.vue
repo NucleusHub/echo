@@ -7,8 +7,6 @@ import { Icon } from '@core/icons'
 
 const { t } = useI18n()
 
-// Pick a single member from a list, then confirm. Used for choosing a successor
-// when leaving a group, and for transferring the group-admin role.
 const props = defineProps({
   show: { type: Boolean, default: false },
   title: { type: String, default: '' },

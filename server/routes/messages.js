@@ -21,16 +21,12 @@ async function assertMember(req, res, chatId) {
   return true
 }
 
-// Paginated history (cursor = `before` ISO timestamp).
 router.get('/:chatId', async (req, res) => {
   if (!(await assertMember(req, res, req.params.chatId))) return
   const { before, limit } = req.query
   res.json(await history(req.params.chatId, { before, limit: Number(limit) || 50 }))
 })
 
-// REST send path — the realtime path is preferred (Socket.IO message:send) but
-// this lets other Nucleus apps post messages server-to-server (e.g. Goals
-// announcing a completed task) using the same persist→publish→fan-out flow.
 router.post('/:chatId', async (req, res) => {
   if (!(await assertMember(req, res, req.params.chatId))) return
   try {

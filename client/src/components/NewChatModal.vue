@@ -8,14 +8,11 @@ import { Icon } from '@core/icons'
 
 const { t } = useI18n()
 
-// Two-tab "new conversation" modal:
-//  • Chat       → pick one person, start a DM
-//  • Group chat → name it + pick several people, create a group
 const props = defineProps({
   show: { type: Boolean, default: false },
   profiles: { type: Array, default: () => [] },
   currentUserId: { type: String, default: null },
-  initialTab: { type: String, default: 'dm' }, // 'dm' | 'group'
+  initialTab: { type: String, default: 'dm' },
 })
 const emit = defineEmits(['start-dm', 'create-group', 'close'])
 
@@ -60,7 +57,6 @@ function createGroup() {
 <template>
   <TemplateModal :show="show" size="sm" @cancel="emit('close')">
     <div class="flex max-h-[80vh] flex-col">
-      <!-- Header -->
       <div class="flex shrink-0 items-center justify-between px-5 pb-4 pt-5">
         <h2 class="text-sm font-semibold text-slate-900 dark:text-white">{{ t('echo.newConversation') }}</h2>
         <button
@@ -72,7 +68,6 @@ function createGroup() {
         </button>
       </div>
 
-      <!-- Tabs -->
       <AppTabs
         v-model="tab"
         :tabs="TABS"
@@ -80,7 +75,6 @@ function createGroup() {
       />
 
       <div class="flex-1 overflow-y-auto px-5 py-4">
-        <!-- Group name (group tab only) -->
         <template v-if="tab === 'group'">
           <input
             v-model="groupName"
@@ -121,7 +115,6 @@ function createGroup() {
         </div>
       </div>
 
-      <!-- Footer (group tab only — DMs start on click) -->
       <div v-if="tab === 'group'" class="flex shrink-0 justify-end gap-3 border-t border-white/30 px-5 py-4 dark:border-white/8">
         <button
           class="cursor-pointer rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:hover:text-white"

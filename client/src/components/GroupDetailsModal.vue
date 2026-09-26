@@ -8,9 +8,6 @@ import ShieldIcon from '@/assets/icons/shield.svg?component'
 
 const { t } = useI18n()
 
-// Group management hub (admin only): rename, transfer admin, remove members and
-// add new ones — all in one place. Bound to the live chat object, so changes
-// made here (or by others) reflect immediately.
 const props = defineProps({
   show: { type: Boolean, default: false },
   chat: { type: Object, default: null },
@@ -21,7 +18,6 @@ const emit = defineEmits(['rename', 'transfer', 'remove', 'add', 'close'])
 
 const profileMap = computed(() => Object.fromEntries(props.profiles.map(p => [String(p._id), p])))
 
-// Editable name — seeded on open, only "saveable" once it differs.
 const name = ref('')
 const search = ref('')
 watch(() => props.show, v => {
@@ -48,7 +44,6 @@ function saveName() {
 <template>
   <TemplateModal :show="show" size="md" @cancel="emit('close')">
     <div class="flex max-h-[85vh] flex-col">
-      <!-- Header -->
       <div class="flex shrink-0 items-center justify-between px-5 pb-3 pt-5">
         <h2 class="text-sm font-semibold text-slate-900 dark:text-white">{{ t('echo.menu.groupDetails') }}</h2>
         <button
@@ -60,7 +55,6 @@ function saveName() {
         </button>
       </div>
 
-      <!-- Name field -->
       <div class="px-5 pb-4">
         <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">{{ t('echo.group.name') }}</label>
         <div class="flex gap-2">
@@ -84,7 +78,6 @@ function saveName() {
       <div class="border-t border-slate-200/60 dark:border-white/10" />
 
       <div class="flex-1 overflow-y-auto px-5 py-4">
-        <!-- Members -->
         <p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">
           {{ t('echo.group.members', { count: members.length }) }}
         </p>
@@ -119,7 +112,6 @@ function saveName() {
           </div>
         </div>
 
-        <!-- Add people -->
         <p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-white/40">{{ t('echo.people.addPeople') }}</p>
         <input
           v-model="search"
@@ -146,7 +138,6 @@ function saveName() {
         </div>
       </div>
 
-      <!-- Footer -->
       <div class="flex shrink-0 justify-end border-t border-white/30 px-5 py-4 dark:border-white/8">
         <button
           class="cursor-pointer rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-400"

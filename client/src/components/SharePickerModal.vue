@@ -6,15 +6,12 @@ import { Icon, Spinner } from '@core/icons'
 
 const { t } = useI18n()
 
-// Built on the core TemplateModal (single source of modal chrome) — it provides
-// the panel, header, close button and search box. This component only supplies
-// the body: a poster grid (`layout='grid'`, watchlist) or rows (`'list'`, goals).
 const props = defineProps({
   show: { type: Boolean, default: false },
   title: { type: String, default: '' },
-  items: { type: Array, default: () => [] }, // { key, title, subtitle, thumb, dot, message }
+  items: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
-  layout: { type: String, default: 'list' }, // 'list' | 'grid'
+  layout: { type: String, default: 'list' },
 })
 const emit = defineEmits(['select', 'close'])
 
@@ -46,7 +43,6 @@ const filtered = computed(() => {
       {{ t('echo.share.empty') }}
     </div>
 
-    <!-- Grid (posters / thumbnails) -->
     <div v-else-if="layout === 'grid'" class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
       <button
         v-for="it in filtered"
@@ -68,7 +64,6 @@ const filtered = computed(() => {
       </button>
     </div>
 
-    <!-- List (goals) -->
     <div v-else class="flex flex-col gap-0.5">
       <button
         v-for="it in filtered"

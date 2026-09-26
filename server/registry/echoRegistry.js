@@ -1,23 +1,16 @@
 import { loadManifests } from './manifestLoader.js'
 
-// Built-in message types Echo always understands, independent of any app.
 const BUILTIN_TYPES = ['text', 'system']
 
-// The unified registry: the single source of truth assembled from every app's
-// manifest.echo.json at startup. Both the backend (type validation) and the
-// frontend (renderer/action resolution) read from this — there is no manual
-// registration anywhere.
 class EchoRegistry {
   constructor() {
     this.manifests = []
-    this.messageTypes = new Map() // type -> { app }
+    this.messageTypes = new Map()
     this.composerActions = []
     this.contextActions = []
     for (const t of BUILTIN_TYPES) this.messageTypes.set(t, { app: null })
   }
 
-  // (Re)build the registry from disk. Called once on boot; safe to call again
-  // to hot-reload manifests without restarting the process.
   load() {
     this.manifests = loadManifests()
     this.messageTypes = new Map(BUILTIN_TYPES.map(t => [t, { app: null }]))
@@ -47,8 +40,6 @@ class EchoRegistry {
     return this.messageTypes.get(type)?.app ?? null
   }
 
-  // Serialisable snapshot served to the frontend (routes/registry.js). Maps are
-  // flattened to plain objects/arrays for JSON transport.
   toJSON() {
     return {
       apps: this.manifests.map(m => ({

@@ -17,10 +17,7 @@ export default defineConfig(({ mode }) => ({
   css: {
     transformer: 'lightningcss',
     lightningcss: {
-      // Concrete versions so Lightning CSS actually vendor-prefixes (e.g. adds
-      // -webkit-backdrop-filter for Safari while keeping the standard property
-      // for Firefox/Chrome). Open-ended "safari >= 15" ranges resolve to an
-      // empty target set, which silently disables prefixing.
+      // Concrete versions: open-ended ranges resolve to no targets and silently disable prefixing.
       targets: {
         safari: (15 << 16) | (4 << 8),
         ios_saf: (15 << 16) | (4 << 8),
@@ -36,40 +33,27 @@ export default defineConfig(({ mode }) => ({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@core': fileURLToPath(new URL('./core', import.meta.url)),
-      // Shared widget package (via the ./widgets symlink → repo /widgets), so
-      // this app can render Pulse widgets that opt in to showing here.
       '@widgets-core': fileURLToPath(new URL('./widgets/core', import.meta.url)),
     },
   },
   server: {
     host: '0.0.0.0',
     port: 5179,
-    // apps/ is bind-mounted only so the integration glob can resolve at build time.
-    // Keep the dev watcher out of it: don't follow symlinks (the client/apps
-    // host-build helper symlink points back into apps/ → infinite recursion /
-    // ELOOP), and don't watch other apps' client/server source or node_modules.
-    // Each app's echo/ folder stays watched, so integration edits still hot-reload.
+    // Don't follow the client/apps symlink (ELOOP) or watch other apps' sources.
     watch: {
       followSymlinks: false,
       ignored: ['**/apps/*/client/**', '**/apps/*/server/**', '**/apps/**/node_modules/**'],
     },
     proxy: {
-      // REST + the Socket.IO endpoint share the /api/echo prefix; ws:true lets
-      // the WebSocket upgrade for Socket.IO pass through in dev.
       '/api/echo': {
         target: process.env.API_TARGET || 'http://localhost:3006',
         changeOrigin: true,
         ws: true,
       },
-      // Pulse state, so widgets that opt in to showing here can load in dev.
-      // (Prod nginx routes /api/pulse centrally; this is dev-only.)
       '/api/pulse': {
         target: process.env.PULSE_TARGET || 'http://localhost:3004',
         changeOrigin: true,
       },
-      // Prism media (thumbnails + range-streamed originals) so photos/videos
-      // shared into a chat render and play in dev. (Prod nginx routes /api/prism
-      // centrally; this is dev-only.)
       '/api/prism': {
         target: process.env.PRISM_TARGET || 'http://localhost:3011',
         changeOrigin: true,

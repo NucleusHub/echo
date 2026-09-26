@@ -1,13 +1,10 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { io } from 'socket.io-client'
 
-// Thin Socket.IO wrapper. One shared connection per tab (the cookie carries the
-// JWT, so no token plumbing). Exposes reactive typing/unread state and
-// an event bus for incoming messages that views subscribe to.
 let socket = null
 const connected = ref(false)
-const typingByChat = ref({}) // chatId -> Set(userId)
-const unread = ref({}) // chatId -> count
+const typingByChat = ref({})
+const unread = ref({})
 
 const messageHandlers = new Set()
 const chatUpsertHandlers = new Set()
@@ -28,11 +25,9 @@ function ensureSocket() {
     for (const h of messageHandlers) h(msg)
   })
 
-  // A chat I'm a member of was created / renamed / had its membership change.
   socket.on('chat:upsert', chat => {
     for (const h of chatUpsertHandlers) h(chat)
   })
-  // A chat was deleted, or I was removed from it.
   socket.on('chat:removed', ({ chatId }) => {
     for (const h of chatRemovedHandlers) h(chatId)
   })
@@ -58,7 +53,6 @@ function ensureSocket() {
 export function useEchoSocket() {
   onMounted(ensureSocket)
 
-  // Send a message and resolve with the server-persisted DTO (or reject on error).
   function send(chatId, { type = 'text', payload = {} }) {
     return new Promise((resolve, reject) => {
       ensureSocket().emit('message:send', { chatId, type, payload }, res => {

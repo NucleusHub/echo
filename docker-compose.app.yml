@@ -13,8 +13,6 @@ services:
       MONGODB_URI: mongodb://mongo:27017/nucleus
       REDIS_URL: redis://redis:6379
       PORT: 3006
-      # The apps dir is mounted read-only so Echo can auto-discover every app's
-      # echo/manifest.echo.json at startup (registry/manifestLoader.js).
       APPS_DIR: /apps
       JWT_SECRET: ${JWT_SECRET:-nucleus-jwt-secret}
     volumes:
@@ -45,8 +43,7 @@ services:
       nucleus.role: "app-client"
       nucleus.app: "echo"
     environment:
-      # Host edits over the Docker VM file share (virtiofs) emit no inotify
-      # events, so Vite would keep serving stale modules — poll instead.
+      # virtiofs emits no inotify events; poll instead.
       CHOKIDAR_USEPOLLING: "true"
       API_TARGET: http://echo-server:3006
       NUCLEUS_HOST: ${NUCLEUS_HOST:-nucleus.olm-altair.ts.net}
@@ -54,21 +51,11 @@ services:
       - ./client/src:/app/src
       - ./client/index.html:/app/index.html
       - ./client/vite.config.js:/app/vite.config.js
-      # Locale files for main.js's `import '../locales/en-US.json'` fallback. The
-      # baked-in `client/locales` symlink (→ ../locales) dangles in the container
-      # because ../locales is outside the ./client build context; mount the dir
-      # at the symlink's resolved target (/app/locales → /locales) so Vite can
-      # resolve it in dev. (Prod is fine: dist/ is built on the host.)
+      # client/locales symlink dangles in the container; mount at its resolved target.
       - ./locales:/locales:ro
       - ../../core:/app/core:ro
       - ../../plugins:/app/plugins:ro
-      # Widget package, so core/AuthGuard's @widgets-core import resolves (Pulse
-      # widgets can float in this app). Mirrors the hub. Read-only.
       - ../../widgets:/app/widgets:ro
-      # Apps' client-side Echo integrations (apps/<app>/echo/integration.echo.js)
-      # are auto-discovered by src/echo-integrations.js via the ../apps glob, so
-      # the dev server needs the sibling apps mounted — same as echo-server's
-      # /apps mount for manifest discovery.
       - ../../apps:/app/apps:ro
     depends_on:
       echo-server:
