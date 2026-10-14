@@ -26,10 +26,10 @@ export function initSocket(httpServer) {
     cors: { origin: true, credentials: true },
   })
 
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     try {
       const cookies = parseCookie(socket.handshake.headers.cookie || '')
-      const profile = verifyToken(cookies.nucleus_token)
+      const profile = await verifyToken(cookies.nucleus_token)
       socket.data.userId = profile.profileId
       if (!socket.data.userId) throw new Error('no id in token')
       next()
